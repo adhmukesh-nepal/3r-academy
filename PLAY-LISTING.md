@@ -57,10 +57,15 @@ Learn it · lock it in · top the merit list.
 - **Privacy policy URL:** https://3r.mukeshadhikari.com/privacy.html
 
 ## Data safety form — answers
-- **Does your app collect or share user data?** No.
-- Progress, bookmarks and the access code are stored **only on the device** and are not transmitted → declare *no data collected*.
-- If you keep the optional Google Form sign-up link: that is an external website, not in-app data collection. (If Play asks, you can note the app links out to a voluntary sign-up form.)
-- **Ads:** No. **In-app purchases:** No.
+Since accounts (Phase A) are optional, the app **can** collect data when a user signs in. Declare:
+- **Does your app collect or share user data?** Yes (collects; does **not** share with third parties).
+- **Data collected — Personal info → Email address:** collected **only if the user signs in**.
+  Purpose: *Account management* + *App functionality* (sync across devices). Not shared. Not for ads.
+- **Data collected — App activity (study progress):** tied to the account when signed in.
+  Purpose: *App functionality*. Not shared.
+- **Is data encrypted in transit?** Yes (HTTPS). **Can users request deletion?** Yes (via contact email).
+- If a user never signs in, everything stays on-device (no collection). Signing in is optional.
+- **Ads:** No. **In-app purchases:** No (for now).
 
 ## Content rating
 - Complete the questionnaire honestly → this app will rate **Everyone**. No violence, no user-generated content, no data collection.

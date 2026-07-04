@@ -96,7 +96,10 @@
       btn.disabled = true; errEl.style.display = "none";
       tryUnlock(v, b.salt).then(function () {
         var c = codes(); c[book] = v; localStorage.setItem("3r_keys", JSON.stringify(c));
-        location.reload(); // reload so app.js renders the now-decryptable content
+        // if signed in, remember this unlock on the account (opens on any device)
+        var save = (window.TR && window.TR.saveEntitlement) ? window.TR.saveEntitlement(book, v) : null;
+        if (save && save.then) { save.then(function () { location.reload(); }); }
+        else { location.reload(); } // reload so app.js renders the now-decryptable content
       }).catch(function () {
         errEl.style.display = "block"; btn.disabled = false;
       });

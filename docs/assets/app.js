@@ -380,7 +380,10 @@
     p.weakMcqs = p.weakMcqs || [];   // [questionIndex]
     return p;
   }
-  function setProg(book, ch, obj) { localStorage.setItem(progKey(book, ch), JSON.stringify(obj)); }
+  function setProg(book, ch, obj) {
+    localStorage.setItem(progKey(book, ch), JSON.stringify(obj));
+    if (window.TR && window.TR.pushProgress) window.TR.pushProgress(book, ch, obj); // sync when signed in
+  }
   function today() { return Math.floor(Date.now() / 86400000); }
 
   // simplified SM-2: rating is "again" | "good" | "easy"
@@ -592,9 +595,7 @@
   }
 
   /* ---------- dispatch ---------- */
-  document.addEventListener("DOMContentLoaded", function () {
-    registerSW();
-    wireViber();
+  function renderPage() {
     switch (document.body.getAttribute("data-page")) {
       case "home": renderHome(); break;
       case "book": renderBook(); break;
@@ -602,5 +603,12 @@
       case "flashcards": initFlashcards(); break;
       case "quiz": initQuiz(); break;
     }
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    registerSW();
+    wireViber();
+    renderPage();
   });
+  // re-render when account data (unlock codes / progress) syncs in after sign-in
+  window.addEventListener("tr-synced", renderPage);
 })();

@@ -25,6 +25,23 @@ a:hover{text-decoration:underline}
 .topbar nav a:hover{color:#fff;text-decoration:none}
 .topbar a.back{color:#cfe0e7;font-size:14px}
 
+/* ---- account control (Phase A auth) ---- */
+.tr-acct{display:flex;align-items:center;gap:8px;margin-left:auto;padding-left:12px}
+.tr-acct .tr-email{color:#cfe0e7;font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-acct button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.tr-acct button:hover{background:rgba(255,255,255,.12)}
+.tr-modal{position:fixed;inset:0;z-index:100000;background:rgba(11,28,34,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.tr-modal .tr-box{background:#fff;color:var(--ink);max-width:420px;width:100%;border-radius:16px;padding:26px 24px;box-shadow:0 20px 50px rgba(0,0,0,.3);position:relative}
+.tr-modal h3{margin:0 0 6px;font-size:20px}
+.tr-modal p{margin:0 0 16px;color:var(--muted);font-size:14px}
+.tr-modal input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:16px}
+.tr-modal .tr-primary{width:100%;margin-top:12px;background:var(--recall);color:#fff;border:0;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer}
+.tr-modal .tr-primary:disabled{opacity:.6;cursor:default}
+.tr-modal .tr-x{position:absolute;top:8px;right:14px;border:0;background:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer}
+.tr-msg{font-size:13px;margin-top:10px;color:var(--muted)}
+.tr-msg.ok{color:#3c5a24} .tr-msg.err{color:#a3271f}
+@media(max-width:560px){.tr-acct .tr-email{display:none}}
+
 /* ---- hero ---- */
 header.hero{background:linear-gradient(150deg,#16323d 0%,#1f4e5f 60%,#256074 100%);color:#fff;padding:40px 0 38px;text-align:center}
 header.hero.left{text-align:left}
