@@ -30,7 +30,7 @@ Where everything runs, the free-tier limits, and the few routine tasks to keep i
 - **Weekly (or after big signup pushes): export `profiles` to CSV.** Supabase → Table Editor →
   `profiles` → Export. Free tier has **no auto-backup**, so this is your safety copy of the
   student list. (Pro adds daily backups.)
-- **Add/update content:** edit `content/<book>.xlsx` → `python3 tools/build_data.py` →
+- **Add/update content:** edit `content/<book>.xlsx` → `./build.sh` →
   `git add -A && git commit && git push`. Live in ~40s via GitHub Actions.
 - **Watch usage:** Supabase → Reports/Usage (DB size, MAU); Resend → dashboard (emails sent,
   delivery/spam); GitHub → Actions tab (deploy success).

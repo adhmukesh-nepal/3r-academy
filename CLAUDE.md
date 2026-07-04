@@ -105,7 +105,9 @@ You author content by editing one **Excel workbook per book** in `content/`, the
 converter. **You never touch JSON or code.**
 
 > **Every-time workflow:** edit `content/<book-id>.xlsx` → run
-> `python3 tools/build_data.py` → `git add -A && git commit -m "…" && git push`.
+> `./build.sh` → `git add -A && git commit -m "…" && git push`.
+> (`./build.sh` runs the converter in a self-installing local Python env; equivalent to
+> `python3 tools/build_data.py`.)
 > GitHub Pages redeploys automatically (and the installed Android app picks it up too). The
 > converter checks your content and prints plain-language errors *before* writing anything, so
 > a mistake can't push a broken page.
