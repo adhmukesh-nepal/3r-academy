@@ -88,25 +88,58 @@
     ov.innerHTML =
       '<div class="tr-box"><button class="tr-x" id="tr-x">×</button>' +
       '<h3>Sign in to 3R Academy</h3>' +
-      '<p>Save your progress and unlock your books on any device. We\'ll email you a one-tap login link — no password.</p>' +
-      '<input id="tr-email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">' +
-      '<button id="tr-send" class="tr-primary">Email me a login link</button>' +
+      '<p id="tr-lead">Save your progress and unlock your books on any device. We\'ll email you a 6-digit code — no password.</p>' +
+      '<div id="tr-step1">' +
+        '<input id="tr-email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">' +
+        '<button id="tr-send" class="tr-primary">Email me a code</button>' +
+      '</div>' +
+      '<div id="tr-step2" style="display:none">' +
+        '<input id="tr-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code">' +
+        '<button id="tr-verify" class="tr-primary">Verify &amp; sign in</button>' +
+        '<button id="tr-back" class="tr-link">Use a different email</button>' +
+      '</div>' +
       '<div id="tr-msg" class="tr-msg"></div></div>';
     document.body.appendChild(ov);
-    document.getElementById("tr-x").onclick = function () { ov.remove(); };
-    ov.addEventListener("click", function (e) { if (e.target === ov) ov.remove(); });
-    var send = document.getElementById("tr-send"), msg = document.getElementById("tr-msg");
-    send.onclick = function () {
-      var email = (document.getElementById("tr-email").value || "").trim();
+    var close = function () { ov.remove(); };
+    document.getElementById("tr-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+
+    var msg = document.getElementById("tr-msg");
+    var emailInput = document.getElementById("tr-email");
+    var currentEmail = "";
+    function show(step) {
+      document.getElementById("tr-step1").style.display = (step === 1) ? "" : "none";
+      document.getElementById("tr-step2").style.display = (step === 2) ? "" : "none";
+    }
+
+    document.getElementById("tr-send").onclick = function () {
+      var email = (emailInput.value || "").trim();
       if (!email) return;
-      send.disabled = true; msg.textContent = "Sending…"; msg.className = "tr-msg";
-      client.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin + location.pathname + location.search } })
-        .then(function (r) {
-          if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; send.disabled = false; }
-          else { msg.textContent = "Check your email for the login link. You can close this."; msg.className = "tr-msg ok"; }
-        });
+      this.disabled = true; msg.textContent = "Sending…"; msg.className = "tr-msg";
+      var self = this;
+      client.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } }).then(function (r) {
+        self.disabled = false;
+        if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; return; }
+        currentEmail = email;
+        document.getElementById("tr-lead").textContent = "We emailed a 6-digit code to " + email + ". Enter it below.";
+        show(2); msg.textContent = ""; document.getElementById("tr-otp").focus();
+      });
     };
-    document.getElementById("tr-email").focus();
+    document.getElementById("tr-verify").onclick = function () {
+      var token = (document.getElementById("tr-otp").value || "").replace(/\s/g, "");
+      if (!token) return;
+      this.disabled = true; msg.textContent = "Verifying…"; msg.className = "tr-msg";
+      var self = this;
+      client.auth.verifyOtp({ email: currentEmail, token: token, type: "email" }).then(function (r) {
+        if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; self.disabled = false; }
+        else { close(); } // onAuthStateChange handles the session + sync
+      });
+    };
+    document.getElementById("tr-back").onclick = function () {
+      document.getElementById("tr-lead").textContent = "Save your progress and unlock your books on any device. We'll email you a 6-digit code — no password.";
+      show(1); msg.textContent = ""; emailInput.focus();
+    };
+    emailInput.focus();
   }
 
   /* ---- react to auth state ---- */

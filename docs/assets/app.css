@@ -38,6 +38,8 @@ a:hover{text-decoration:underline}
 .tr-modal .tr-primary{width:100%;margin-top:12px;background:var(--recall);color:#fff;border:0;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer}
 .tr-modal .tr-primary:disabled{opacity:.6;cursor:default}
 .tr-modal .tr-x{position:absolute;top:8px;right:14px;border:0;background:none;font-size:26px;line-height:1;color:var(--muted);cursor:pointer}
+.tr-modal .tr-link{width:100%;margin-top:8px;background:none;border:0;color:var(--read);font-size:13px;font-weight:600;cursor:pointer}
+.tr-modal #tr-otp{text-align:center;letter-spacing:6px;font-size:20px;font-weight:700}
 .tr-msg{font-size:13px;margin-top:10px;color:var(--muted)}
 .tr-msg.ok{color:#3c5a24} .tr-msg.err{color:#a3271f}
 @media(max-width:560px){.tr-acct .tr-email{display:none}}
