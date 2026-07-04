@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.mukeshadhikari.threeracademy",
+      "package_name": "com.mukeshadhikari.app_3r.twa",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_SHA256_FINGERPRINT_FROM_PLAY_CONSOLE"
+        "18:5D:93:5C:99:34:D4:BF:3A:35:E5:48:F0:13:2C:EF:F5:75:9F:73:D0:FD:A5:E8:EA:35:47:89:91:0B:E8:29"
       ]
     }
   }

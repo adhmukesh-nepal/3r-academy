@@ -24,7 +24,7 @@ signing key), so follow these steps on your Mac.
 2. It scores the PWA (manifest, service worker, icons — all already in place) and shows any
    warnings. Fix anything critical (there shouldn't be any).
 3. Click **Package for stores → Android → Generate**. Keep these settings:
-   - **Package ID:** `com.mukeshadhikari.threeracademy`  *(must match `assetlinks.json` — see below)*
+   - **Package ID:** `com.mukeshadhikari.app_3r.twa`  *(must match `assetlinks.json` — see below)*
    - **App name:** 3R Academy: Health Loksewa Prep
    - **Launcher name:** 3R Academy
    - **Signing key:** choose **"Create new"** the first time. **Download and keep the keystore
@@ -40,7 +40,7 @@ Requires Node + a JDK. Then:
 ```bash
 npm i -g @bubblewrap/cli
 bubblewrap init --manifest https://3r.mukeshadhikari.com/manifest.webmanifest
-# answer prompts; set applicationId to com.mukeshadhikari.threeracademy
+# answer prompts; set applicationId to com.mukeshadhikari.app_3r.twa
 bubblewrap build          # produces app-release-bundle.aab + signing key + assetlinks.json
 ```
 
@@ -56,7 +56,7 @@ what `Prep-main/.well-known/assetlinks.json` is for (already added to the repo, 
    **`sha256_cert_fingerprints`** value.
 2. Paste it into `Prep-main/.well-known/assetlinks.json`, replacing
    `REPLACE_WITH_SHA256_FINGERPRINT_FROM_PLAY_CONSOLE`. Keep `package_name` as
-   `com.mukeshadhikari.threeracademy` (or change both to match if you chose a different ID).
+   `com.mukeshadhikari.app_3r.twa` (or change both to match if you chose a different ID).
 3. `git commit` + `git push`. Verify it's live:
    `https://3r.mukeshadhikari.com/.well-known/assetlinks.json` should return the JSON.
 

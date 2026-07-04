@@ -20,3 +20,11 @@ venv/
 
 # Note: data/**.json is generated but IS committed — GitHub Pages serves it directly
 # (the converter is not run on the server). Do not ignore it.
+
+# Google Play (TWA) build output — contains the signing keystore + passwords.
+# NEVER commit these. Back them up privately (they are irreplaceable for app updates).
+3R Academy - Google Play package/
+*.keystore
+*.jks
+*.aab
+*.apk
