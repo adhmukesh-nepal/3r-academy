@@ -253,6 +253,12 @@ def main():
     total_ch = 0
     for b in books:
         bid = b["catalog"]["id"]
+        # Clear this book's previously-generated chapter files so removing/unpublishing a
+        # chapter doesn't leave stale output behind (book.json + unlock.enc are rewritten below).
+        bookdir = DATA / bid
+        if bookdir.exists():
+            for f in list(bookdir.glob("ch*.enc")) + list(bookdir.glob("ch*.json")):
+                f.unlink()
         # Coming-soon books (no chapters yet) only contribute a catalog entry.
         if b["book_json"]["chapters"]:
             # book.json (chapter list / titles) stays plaintext — it's the public table of contents.
