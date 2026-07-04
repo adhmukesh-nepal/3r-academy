@@ -1,0 +1,98 @@
+{
+  "book": "ha-loksewa",
+  "name": "Health Assistant Loksewa — Comprehensive Review",
+  "edition": "18th Edition",
+  "tagline": "learn it · lock it in · top the merit list",
+  "chapters": [
+    {
+      "n": 1,
+      "title": "Public Health Programmes",
+      "ready": false
+    },
+    {
+      "n": 2,
+      "title": "Planning & Management",
+      "ready": false
+    },
+    {
+      "n": 3,
+      "title": "Organizational Structure",
+      "ready": false
+    },
+    {
+      "n": 4,
+      "title": "Community Mobilization",
+      "ready": false
+    },
+    {
+      "n": 5,
+      "title": "Epidemiology & Disease Control",
+      "ready": true
+    },
+    {
+      "n": 6,
+      "title": "Chapter 6",
+      "ready": false
+    },
+    {
+      "n": 7,
+      "title": "Child Health",
+      "ready": false
+    },
+    {
+      "n": 8,
+      "title": "Chapter 8",
+      "ready": false
+    },
+    {
+      "n": 9,
+      "title": "Chapter 9",
+      "ready": false
+    },
+    {
+      "n": 10,
+      "title": "Chapter 10",
+      "ready": false
+    },
+    {
+      "n": 11,
+      "title": "Chapter 11",
+      "ready": false
+    },
+    {
+      "n": 12,
+      "title": "Chapter 12",
+      "ready": false
+    },
+    {
+      "n": 13,
+      "title": "Chapter 13",
+      "ready": false
+    },
+    {
+      "n": 14,
+      "title": "Chapter 14",
+      "ready": false
+    },
+    {
+      "n": 15,
+      "title": "Chapter 15",
+      "ready": false
+    },
+    {
+      "n": 16,
+      "title": "Pharmacy",
+      "ready": false
+    },
+    {
+      "n": 17,
+      "title": "Chapter 17",
+      "ready": false
+    },
+    {
+      "n": 18,
+      "title": "Past Questions & Practice Sets",
+      "ready": false
+    }
+  ]
+}

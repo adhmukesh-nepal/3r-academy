@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revision Station</title>
+<meta name="theme-color" content="#16323d">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="3R Academy">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body data-page="chapter">
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="/">3R Academy</a>
+    <a class="back" id="backToBook" href="/">← Chapters</a>
+  </div>
+</div>
+
+<header class="hero left">
+  <div class="wrap">
+    <div class="brand-row"><span class="dot"></span> <span id="brandName">Book name</span></div>
+    <div class="eyebrow" id="chLabel">Revision Station</div>
+    <h1 id="chTitle">Loading…</h1>
+    <p class="ed" id="chEdition"></p>
+    <div class="threeR"><span class="r1">Read</span><span class="r2">Recall</span><span class="r3">Rank</span></div>
+    <div class="tag" id="tagline">learn it · lock it in · top the merit list</div>
+  </div>
+</header>
+
+<div class="wrap main">
+
+  <div class="signup" id="signup">
+    <h2>Get free access to every resource</h2>
+    <p>Free flashcards, video lessons and exam alerts for Loksewa and licensing exams. Sign up once to unlock everything — and join our Viber group for updates.</p>
+    <div class="su-actions">
+      <a class="btn-get" href="https://forms.gle/f8mLCm8AzpxLduTV6" target="_blank" rel="noopener">Get free access →</a>
+      <a class="btn-viber" id="viberBtn" href="REPLACE_WITH_VIBER_LINK" target="_blank" rel="noopener">Join our Viber group</a>
+    </div>
+    <div class="note">We only use this to send you study resources. No spam. Unsubscribe anytime.</div>
+  </div>
+
+  <section id="watch">
+    <div class="sechead read"><span class="pill">Read</span><h3>Watch the lessons</h3></div>
+    <p class="lead">Short, high-yield videos for each part of the chapter.</p>
+    <div class="grid v" id="videoGrid"></div>
+  </section>
+
+  <section id="flashcards">
+    <div class="sechead recall"><span class="pill">Recall</span><h3>Flashcard decks</h3></div>
+    <p class="lead">Spaced-repetition decks built from the chapter's KEY facts, ALERT pairs, mnemonics and past questions.</p>
+    <div class="grid d" id="deckGrid"></div>
+    <p class="prog" id="deckProg"></p>
+  </section>
+
+  <section id="practice">
+    <div class="sechead rank"><span class="pill">Rank</span><h3>Practice questions (MCQs)</h3></div>
+    <p class="lead">Test yourself with rationalised MCQs — every option comes with the reason it's right or wrong.</p>
+    <div id="quizEntry"></div>
+  </section>
+
+  <section id="rapid">
+    <div class="sechead rank"><span class="pill">Rank</span><h3>Most important things to remember</h3></div>
+    <p class="lead">The one-liners worth a final glance before the exam.</p>
+    <ul class="rapid" id="rapidList"></ul>
+  </section>
+
+  <footer>
+    <div class="qrnote">📕 You reached this page from the QR code in <strong id="chFoot">this chapter</strong>. Bookmark it — links here stay current even after the book is printed.</div>
+    <div>© Mukesh Adhikari · All rights reserved.</div>
+  </footer>
+</div>
+
+<script src="/assets/app.js"></script>
+<script src="/gate.js"></script>
+</body>
+</html>

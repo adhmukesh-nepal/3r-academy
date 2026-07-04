@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards · Loksewa</title>
+<meta name="theme-color" content="#16323d">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="3R Academy">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body data-page="flashcards">
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="/">3R Academy</a>
+    <a class="back" id="fcBack" href="/">← Chapter</a>
+  </div>
+</div>
+<div class="wrap fc-wrap">
+  <h1 id="fcTitle" style="font-size:22px;margin:22px 0 4px">Flashcards</h1>
+  <p class="lead2" style="margin:0 0 16px">Tap a card to flip. Use ← → to move, Space to flip.</p>
+  <div class="decks" id="decks"></div>
+  <div class="star-row"><button id="btnStar" class="star">☆ Star</button></div>
+  <div class="flipcard" id="flipcard"><div class="face q" id="face">Loading…</div></div>
+  <div class="hint" id="hint">Tap card to reveal the answer</div>
+  <div class="rate" id="rateRow" style="display:none">
+    <button data-r="again" class="again">Again</button>
+    <button data-r="good" class="good">Good</button>
+    <button data-r="easy" class="easy">Easy</button>
+  </div>
+  <div class="controls">
+    <button id="btnPrev">← Prev</button>
+    <button class="flip" id="btnFlip">Flip</button>
+    <button id="btnNext">Next →</button>
+  </div>
+  <div class="meta-row"><span id="count"></span><a id="btnShuffle">↻ Shuffle</a></div>
+</div>
+<script src="/assets/app.js"></script>
+<script src="/gate.js"></script>
+</body>
+</html>

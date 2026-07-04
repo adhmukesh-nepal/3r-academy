@@ -1,0 +1,22 @@
+# OS / editor junk
+.DS_Store
+.Rhistory
+*.Rhistory
+
+# Excel lock files (created while a workbook is open)
+~$*.xlsx
+
+# SOURCE SPREADSHEETS — kept OFF the public repo on purpose.
+# They contain the plaintext content AND the access codes. Only the ENCRYPTED
+# output (docs/data/*.enc) is published. BACK THESE UP PRIVATELY (OneDrive /
+# a private repo) — they are your master copy and are not in this repo.
+content/
+
+# Python (the converter tooling)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Note: data/**.json is generated but IS committed — GitHub Pages serves it directly
+# (the converter is not run on the server). Do not ignore it.

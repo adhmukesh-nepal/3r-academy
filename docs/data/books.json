@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ha-loksewa",
+    "name": "Health Assistant — Loksewa",
+    "board": "PSC · Government job",
+    "desc": "Comprehensive Review (18th ed.)",
+    "category": "loksewa",
+    "ready": true,
+    "salt": "4KprTTri2nBALtmnO7FBgw==",
+    "locked": true
+  },
+  {
+    "id": "pho-loksewa",
+    "name": "Public Health Officer — Loksewa",
+    "board": "PSC · Government job",
+    "desc": "Coming soon",
+    "category": "loksewa",
+    "ready": false
+  },
+  {
+    "id": "ha-licensing",
+    "name": "Health Assistant — Licensing",
+    "board": "NHPC · Council license",
+    "desc": "Coming soon",
+    "category": "license",
+    "ready": false
+  },
+  {
+    "id": "staff-nurse-licensing",
+    "name": "Staff Nurse — Licensing",
+    "board": "Nursing Council · License",
+    "desc": "Coming soon",
+    "category": "license",
+    "ready": false
+  },
+  {
+    "id": "mecee-entrance",
+    "name": "MBBS/BDS Entrance — MECEE-BL",
+    "board": "MEC · Entrance",
+    "desc": "Coming soon",
+    "category": "entrance",
+    "ready": false
+  },
+  {
+    "id": "bsc-nursing-entrance",
+    "name": "BSc Nursing Entrance",
+    "board": "Entrance · Nursing",
+    "desc": "Coming soon",
+    "category": "entrance",
+    "ready": false
+  }
+]
