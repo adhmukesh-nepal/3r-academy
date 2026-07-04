@@ -3,6 +3,12 @@
 > These are the durable **rules/standards** for the app. Read `SPEC.md` for *what* we're
 > building and *why*; this file is *how* — the conventions any contributor (or Claude) must
 > follow, plus copy-paste recipes for the author to add content without touching code.
+>
+> **Current status & roadmap:** see `SPEC.md → BUILD STATUS & ROADMAP`. As of 2026-07-04 the
+> project runs on **Phase A** (v1 study app + accounts, live at 3r.mukeshadhikari.com).
+> **Phase B** (server-gated content) and **Phase C** (subscriptions) are specced but not built —
+> to start one, tell a session *"read SPEC.md's roadmap, then start Phase B/C"*.
+> Operational limits & routine tasks: `OPERATIONS.md`.
 
 ---
 

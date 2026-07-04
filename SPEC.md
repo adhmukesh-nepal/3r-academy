@@ -3,6 +3,84 @@
 > **Brand:** 3R Academy — Health Loksewa & Licensing Prep, founded by Dr. Mukesh Adhikari.
 > Study method: **Read · Recall · Rank (3R)**.
 
+---
+
+# BUILD STATUS & ROADMAP (updated 2026-07-04)
+
+## ✅ Live now — v1 + Phase A (accounts)
+Everything below is built, deployed, and running at **https://3r.mukeshadhikari.com**.
+
+**Study app (v1):** exams grouped by track (Loksewa · Licensing · Entrance) with filter chips;
+flashcards with Anki-style spaced repetition (Again/Good/Easy) + ★ bookmarks; MCQs with Study
+(per-option explanations) and Timed mock modes; weak-areas auto-review; progress tracking; notes;
+YouTube-placeholder videos; installable **PWA** with offline support. Content is **AES-GCM
+encrypted** (key = PBKDF2 of the book access code); the site serves only ciphertext.
+
+**Accounts (Phase A):** optional email **OTP-code** sign-in; **onboarding form** capturing name,
+phone, profession, exam(s), province, book-status, consent, and an optional access code that
+unlocks the matching book; **account-tied unlock** + **cross-device progress sync**.
+
+### The live stack (facts a future session needs)
+- **Frontend/site:** static PWA in `docs/`, hosted on **GitHub Pages**, deployed by **GitHub
+  Actions** (`.github/workflows/pages.yml`) on every push to `main`. Repo: `adhmukesh-nepal/3r-academy`.
+- **Domain:** `3r.mukeshadhikari.com` (GoDaddy CNAME `3r` → `adhmukesh-nepal.github.io`).
+- **Backend:** **Supabase** project `newnrskeprjssplanqlu` (Singapore). Tables `profiles`,
+  `entitlements`, `progress` with per-user RLS. Publishable key is in `docs/assets/config.js`
+  (public/safe); auth code in `docs/assets/auth.js`.
+- **Email:** **Resend** SMTP, sender `noreply@mukeshadhikari.com`; OTP-code templates.
+- **Android:** TWA package built (PWABuilder), package id `com.mukeshadhikari.app_3r.twa`,
+  assetlinks live; **not yet submitted** to Play.
+- **Crypto params (must match across `tools/build_data.py`, `docs/gate.js`, `docs/assets/auth.js`):**
+  PBKDF2-HMAC-SHA256, 200000 iters, 16-byte per-book salt `sha256("3r-salt:"+id)[:16]`, AES-256-GCM.
+- **Ops/limits/analytics:** see `OPERATIONS.md`, `ANALYTICS.md`, `SUPABASE-SETUP.md`, `EMAIL-SETUP.md`.
+
+### Still author-side / optional
+- Submit the Android app to Google Play (`TWA-PLAYSTORE.md`, `PLAY-LISTING.md`); after upload add
+  the Play App Signing SHA-256 to `assetlinks.json`.
+- Set real book codes **with a random suffix** before printing (guessable codes weaken encryption).
+- Custom SMTP is configured; export `profiles` to CSV weekly (Free tier = no backups).
+
+## 🔜 Phase B — server-gated content (stop code-sharing) — NOT built
+**Why:** today's gate is client-side. A valid code decrypts content in the browser, and a
+**shared code** unlocks for anyone. Phase B moves enforcement to the server so only
+**authenticated, entitled** users get content, and codes can be **limited/revoked**.
+
+**Approach (recommended):**
+1. Add a **Supabase Edge Function** `unlock(code)` — validates the code server-side, checks a
+   per-code use limit (e.g. max N accounts per code), and records an `entitlement` for the user.
+   Codes and their max-uses live in a server-only table (not shipped to the client).
+2. Add a **Supabase Edge Function** `content(book, chapter)` — checks the caller's entitlement
+   (auth token) and returns the chapter content only if entitled. Content is decrypted
+   server-side (key held as a function secret), so the browser never receives the key or ciphertext
+   it can reuse without auth.
+3. Client changes: `gate.js` → calls `unlock`; `app.js` `loadEncrypted()` → calls `content`
+   with the user's session token instead of decrypting locally. Sign-in becomes **required** to
+   open content (currently optional).
+**Schema add:** `codes(code, book_id, max_uses, used_count)`, `entitlements` already exists.
+**Effort:** medium–high (2 edge functions + code-admin + client rewiring). **Honest limit:** a
+paid, logged-in user can still scrape their own decrypted content; Phase B stops *non-buyers and
+casual code-sharing*, and lets you revoke codes — .
+
+## 🔜 Phase C — subscriptions — NOT built (builds on Phase B)
+**Approach:** add plans + recurring access; gate content on an **active subscription** (server-side,
+reusing Phase B's `content` function to also check subscription state).
+- **Payments (Nepal reality):** Stripe/PayPal don't pay out to Nepal well. Use **Google Play
+  in-app subscriptions** for the Android app (Google bills; 15–30% cut) and/or **local gateways
+  eSewa / Khalti / Fonepay** for web. This choice drives the integration.
+- **State:** payment provider webhook → Supabase `subscriptions(user_id, status, plan, expires_at)`;
+  `content` function checks it.
+
+
+- **Effort:** high (payment integration + webhooks + billing UI + subscription checks).
+
+## How to resume later
+Tell a new session: *"Read SPEC.md → BUILD STATUS & ROADMAP, then start Phase B"* (or C). The
+prerequisites, file touch-points, and schema additions are listed above. For now the project runs
+on **Phase A**; B and C are optional and only needed if code-sharing hurts revenue (B) or you move
+to recurring pricing (C).
+
+---
+
 
 > **Status:** DRAFT for author review. No app code will be written until this and
 > `CLAUDE.md` are reviewed and approved. Author: Mukesh Adhikari, PhD, MPH, MPA.
