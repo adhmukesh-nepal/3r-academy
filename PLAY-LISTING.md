@@ -59,8 +59,11 @@ Learn it · lock it in · top the merit list.
 ## Data safety form — answers
 Since accounts (Phase A) are optional, the app **can** collect data when a user signs in. Declare:
 - **Does your app collect or share user data?** Yes (collects; does **not** share with third parties).
-- **Data collected — Personal info → Email address:** collected **only if the user signs in**.
-  Purpose: *Account management* + *App functionality* (sync across devices). Not shared. Not for ads.
+- **Data collected — Personal info → Email address, Name, Phone (optional):** collected **only if
+  the user signs in / completes the optional profile**. Purpose: *Account management* + *App
+  functionality* + *Communications* (relevant materials / exam alerts). Not shared. Not for ads.
+- **Data collected — Other info (exam preparing for, profession/field, province, owns-book):**
+  optional profile details for personalisation. Purpose: *App functionality* / *Analytics*. Not shared.
 - **Data collected — App activity (study progress):** tied to the account when signed in.
   Purpose: *App functionality*. Not shared.
 - **Is data encrypted in transit?** Yes (HTTPS). **Can users request deletion?** Yes (via contact email).

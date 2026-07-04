@@ -607,6 +607,12 @@
   document.addEventListener("DOMContentLoaded", function () {
     registerSW();
     wireViber();
+    // "Get free access" becomes the sign-up entry (falls back to the form link if auth unavailable)
+    document.querySelectorAll(".btn-get").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        if (window.TR && window.TR.openSignIn) { e.preventDefault(); window.TR.openSignIn(); }
+      });
+    });
     renderPage();
   });
   // re-render when account data (unlock codes / progress) syncs in after sign-in

@@ -141,6 +141,65 @@
     };
     emailInput.focus();
   }
+  TR.openSignIn = function () { openModal(); }; // used by "Get free access" CTA
+
+  /* ---- onboarding: collect profile details on first sign-in ---- */
+  var PROVINCES = ["Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"];
+  function oval(id) { var e = document.getElementById(id); return e ? (e.value || "").trim() : ""; }
+  function escAttr(s) { return (s || "").replace(/"/g, "&quot;"); }
+
+  function examOptions() {
+    return fetch("/data/books.json", { cache: "no-cache" }).then(function (r) { return r.json(); })
+      .then(function (bs) { return bs.map(function (b) { return '<option value="' + escAttr(b.name) + '">' + (b.name || "") + "</option>"; }).join(""); })
+      .catch(function () { return ""; });
+  }
+
+  function maybeOnboard() {
+    if (!TR.user) return;
+    client.from("profiles").select("onboarded_at").eq("id", TR.user.id).maybeSingle()
+      .then(function (r) { if (!r.data || !r.data.onboarded_at) openOnboard(); }, function () {});
+  }
+
+  function openOnboard() {
+    if (document.getElementById("tr-modal") || document.getElementById("tr-onb")) return;
+    examOptions().then(function (exams) {
+      var ov = document.createElement("div");
+      ov.id = "tr-onb"; ov.className = "tr-modal";
+      ov.innerHTML =
+        '<div class="tr-box wide">' +
+        '<h3>Tell us about you</h3>' +
+        '<p>This helps us send the right materials and exam alerts. Takes about 20 seconds.</p>' +
+        '<label>Full name *</label><input id="o-name" type="text" placeholder="Your name">' +
+        '<label>Phone (optional)</label><input id="o-phone" type="tel" inputmode="tel" placeholder="98XXXXXXXX">' +
+        '<label>Which exam are you preparing for? *</label>' +
+        '<select id="o-exam"><option value="">Select…</option>' + exams + '<option value="Other / not sure">Other / not sure</option></select>' +
+        '<label>Profession / field *</label><input id="o-prof" type="text" placeholder="e.g. Health Assistant, Nurse, Student">' +
+        '<label>Province *</label><select id="o-prov"><option value="">Select…</option>' +
+        PROVINCES.map(function (p) { return '<option value="' + p + '">' + p + "</option>"; }).join("") + "</select>" +
+        '<label>Do you have the book? *</label><select id="o-book"><option value="">Select…</option><option value="yes">Yes</option><option value="no">No</option></select>' +
+        '<button id="o-save" class="tr-primary">Save &amp; continue</button>' +
+        '<button id="o-skip" class="tr-link">Skip for now</button>' +
+        '<div id="o-msg" class="tr-msg"></div></div>';
+      document.body.appendChild(ov);
+      document.getElementById("o-skip").onclick = function () { ov.remove(); };
+      var msg = document.getElementById("o-msg");
+      document.getElementById("o-save").onclick = function () {
+        var name = oval("o-name"), phone = oval("o-phone"), exam = oval("o-exam"),
+            prof = oval("o-prof"), prov = oval("o-prov"), book = oval("o-book");
+        if (!name || !exam || !prof || !prov || !book) { msg.textContent = "Please fill the required (*) fields."; msg.className = "tr-msg err"; return; }
+        this.disabled = true; msg.textContent = "Saving…"; msg.className = "tr-msg";
+        var self = this;
+        client.from("profiles").upsert({
+          id: TR.user.id, email: TR.user.email, full_name: name, phone: phone || null,
+          exam: exam, profession: prof, province: prov, has_book: (book === "yes"),
+          onboarded_at: new Date().toISOString()
+        }, { onConflict: "id" }).then(function (r) {
+          if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; self.disabled = false; }
+          else { ov.remove(); }
+        });
+      };
+    });
+  }
 
   /* ---- react to auth state ---- */
   function setSession(session) {
@@ -168,5 +227,6 @@
     var book = new URLSearchParams(location.search).get("book");
     if (book && getCodes()[book] && document.getElementById("__gate")) { location.reload(); return; }
     window.dispatchEvent(new Event("tr-synced"));
+    maybeOnboard(); // prompt for profile details if not done yet
   }
 })();
