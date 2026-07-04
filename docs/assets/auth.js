@@ -148,10 +148,32 @@
   function oval(id) { var e = document.getElementById(id); return e ? (e.value || "").trim() : ""; }
   function escAttr(s) { return (s || "").replace(/"/g, "&quot;"); }
 
-  function examOptions() {
-    return fetch("/data/books.json", { cache: "no-cache" }).then(function (r) { return r.json(); })
-      .then(function (bs) { return bs.map(function (b) { return '<option value="' + escAttr(b.name) + '">' + (b.name || "") + "</option>"; }).join(""); })
-      .catch(function () { return ""; });
+  // decrypt-check a code against a book (same crypto as gate.js) — lets a code entered at
+  // sign-up actually unlock the matching book.
+  function b64d(s) { var bin = atob(s), a = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; }
+  function normCode(s) { return (s || "").toUpperCase().replace(/[\s-]/g, ""); }
+  function codeMatchesBook(code, saltB64, bookId) {
+    return crypto.subtle.importKey("raw", new TextEncoder().encode(normCode(code)), "PBKDF2", false, ["deriveKey"])
+      .then(function (base) {
+        return crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64d(saltB64), iterations: 200000, hash: "SHA-256" },
+          base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      })
+      .then(function (key) {
+        return fetch("/data/" + bookId + "/unlock.enc", { cache: "no-cache" }).then(function (r) { return r.json(); })
+          .then(function (m) { return crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(m.iv) }, key, b64d(m.ct)); });
+      })
+      .then(function () { return true; }).catch(function () { return false; });
+  }
+  function tryUnlockAny(code) { // returns the matching book id, or null
+    return fetch("/data/books.json", { cache: "no-cache" }).then(function (r) { return r.json(); }).then(function (books) {
+      var ready = books.filter(function (b) { return b.salt; }), i = 0;
+      function step() {
+        if (i >= ready.length) return Promise.resolve(null);
+        var b = ready[i++];
+        return codeMatchesBook(code, b.salt, b.id).then(function (ok) { return ok ? b.id : step(); });
+      }
+      return step();
+    }).catch(function () { return null; });
   }
 
   function maybeOnboard() {
@@ -160,45 +182,66 @@
       .then(function (r) { if (!r.data || !r.data.onboarded_at) openOnboard(); }, function () {});
   }
 
+  var PROFESSIONS = ["Public Health Officer", "Health Assistant / AHW", "Staff Nurse / ANM", "Other"];
+  var EXAM_TRACKS = ["Loksewa / PSC (government job)", "Licensing exam (Council — NHPC / Nursing / Pharmacy / Medical)", "Both", "Not sure yet"];
+  var BOOK_STATUS = ["Yes", "Planning to buy", "No — just want free updates"];
+
   function openOnboard() {
     if (document.getElementById("tr-modal") || document.getElementById("tr-onb")) return;
-    examOptions().then(function (exams) {
-      var ov = document.createElement("div");
-      ov.id = "tr-onb"; ov.className = "tr-modal";
-      ov.innerHTML =
-        '<div class="tr-box wide">' +
-        '<h3>Tell us about you</h3>' +
-        '<p>This helps us send the right materials and exam alerts. Takes about 20 seconds.</p>' +
-        '<label>Full name *</label><input id="o-name" type="text" placeholder="Your name">' +
-        '<label>Phone (optional)</label><input id="o-phone" type="tel" inputmode="tel" placeholder="98XXXXXXXX">' +
-        '<label>Which exam are you preparing for? *</label>' +
-        '<select id="o-exam"><option value="">Select…</option>' + exams + '<option value="Other / not sure">Other / not sure</option></select>' +
-        '<label>Profession / field *</label><input id="o-prof" type="text" placeholder="e.g. Health Assistant, Nurse, Student">' +
-        '<label>Province *</label><select id="o-prov"><option value="">Select…</option>' +
+    var ov = document.createElement("div");
+    ov.id = "tr-onb"; ov.className = "tr-modal";
+    ov.innerHTML =
+      '<div class="tr-box wide">' +
+      '<h3>Complete your sign-up</h3>' +
+      '<p>One sign-up unlocks everything — tell us what you\'re preparing for and we\'ll send what\'s relevant.</p>' +
+      '<label>Full name *</label><input id="o-name" type="text" placeholder="Your name">' +
+      '<label>Phone (optional — for SMS/Viber exam updates)</label><input id="o-phone" type="tel" inputmode="tel" placeholder="98XXXXXXXX">' +
+      '<label>Profession / field *</label><select id="o-prof"><option value="">Select…</option>' +
+        PROFESSIONS.map(function (x) { return '<option value="' + x + '">' + x + "</option>"; }).join("") + "</select>" +
+      '<label>Which exams are you preparing for? *</label>' +
+        EXAM_TRACKS.map(function (x) { return '<label class="chk"><input type="checkbox" class="o-exam" value="' + x + '"> ' + x + "</label>"; }).join("") +
+      '<label>Province *</label><select id="o-prov"><option value="">Select…</option>' +
         PROVINCES.map(function (p) { return '<option value="' + p + '">' + p + "</option>"; }).join("") + "</select>" +
-        '<label>Do you have the book? *</label><select id="o-book"><option value="">Select…</option><option value="yes">Yes</option><option value="no">No</option></select>' +
-        '<button id="o-save" class="tr-primary">Save &amp; continue</button>' +
-        '<button id="o-skip" class="tr-link">Skip for now</button>' +
-        '<div id="o-msg" class="tr-msg"></div></div>';
-      document.body.appendChild(ov);
-      document.getElementById("o-skip").onclick = function () { ov.remove(); };
-      var msg = document.getElementById("o-msg");
-      document.getElementById("o-save").onclick = function () {
-        var name = oval("o-name"), phone = oval("o-phone"), exam = oval("o-exam"),
-            prof = oval("o-prof"), prov = oval("o-prov"), book = oval("o-book");
-        if (!name || !exam || !prof || !prov || !book) { msg.textContent = "Please fill the required (*) fields."; msg.className = "tr-msg err"; return; }
-        this.disabled = true; msg.textContent = "Saving…"; msg.className = "tr-msg";
-        var self = this;
-        client.from("profiles").upsert({
-          id: TR.user.id, email: TR.user.email, full_name: name, phone: phone || null,
-          exam: exam, profession: prof, province: prov, has_book: (book === "yes"),
-          onboarded_at: new Date().toISOString()
-        }, { onConflict: "id" }).then(function (r) {
-          if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; self.disabled = false; }
-          else { ov.remove(); }
-        });
-      };
-    });
+      '<label>Do you have the book? *</label><select id="o-book"><option value="">Select…</option>' +
+        BOOK_STATUS.map(function (x) { return '<option value="' + x + '">' + x + "</option>"; }).join("") + "</select>" +
+      '<label>Book access code (optional)</label><input id="o-code" type="text" placeholder="Code from inside your book" autocapitalize="characters">' +
+      '<div class="hint">If you have the book, enter the code to unlock it right now.</div>' +
+      '<label class="chk" style="margin-top:14px"><input type="checkbox" id="o-consent"> Yes, send me free study resources and exam updates *</label>' +
+      '<button id="o-save" class="tr-primary">Save &amp; continue</button>' +
+      '<button id="o-skip" class="tr-link">Skip for now</button>' +
+      '<div id="o-msg" class="tr-msg"></div></div>';
+    document.body.appendChild(ov);
+    document.getElementById("o-skip").onclick = function () { ov.remove(); };
+    var msg = document.getElementById("o-msg");
+    document.getElementById("o-save").onclick = function () {
+      var name = oval("o-name"), phone = oval("o-phone"), prof = oval("o-prof"),
+          prov = oval("o-prov"), book = oval("o-book"), code = oval("o-code");
+      var exams = Array.prototype.slice.call(document.querySelectorAll(".o-exam:checked")).map(function (c) { return c.value; });
+      var consent = document.getElementById("o-consent").checked;
+      if (!name || !prof || !exams.length || !prov || !book) { msg.textContent = "Please fill the required (*) fields."; msg.className = "tr-msg err"; return; }
+      if (!consent) { msg.textContent = "Please tick the consent box to continue."; msg.className = "tr-msg err"; return; }
+      this.disabled = true; msg.textContent = "Saving…"; msg.className = "tr-msg";
+      var self = this;
+      client.from("profiles").upsert({
+        id: TR.user.id, email: TR.user.email, full_name: name, phone: phone || null,
+        profession: prof, exam: exams.join(", "), province: prov,
+        book_status: book, has_book: (book === "Yes"), consent: true,
+        onboarded_at: new Date().toISOString()
+      }, { onConflict: "id" }).then(function (r) {
+        if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; self.disabled = false; return; }
+        if (code) {
+          msg.textContent = "Checking your code…";
+          tryUnlockAny(code).then(function (bookId) {
+            if (bookId) {
+              var c = getCodes(); c[bookId] = code; setCodes(c);
+              if (TR.saveEntitlement) TR.saveEntitlement(bookId, code);
+              window.dispatchEvent(new Event("tr-synced"));
+            }
+            ov.remove();
+          });
+        } else { ov.remove(); }
+      });
+    };
   }
 
   /* ---- react to auth state ---- */
