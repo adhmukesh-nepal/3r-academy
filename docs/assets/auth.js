@@ -88,13 +88,13 @@
     ov.innerHTML =
       '<div class="tr-box"><button class="tr-x" id="tr-x">×</button>' +
       '<h3>Sign in to 3R Academy</h3>' +
-      '<p id="tr-lead">Save your progress and unlock your books on any device. We\'ll email you a 6-digit code — no password.</p>' +
+      '<p id="tr-lead">Save your progress and unlock your books on any device. We\'ll email you a login code — no password.</p>' +
       '<div id="tr-step1">' +
         '<input id="tr-email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">' +
         '<button id="tr-send" class="tr-primary">Email me a code</button>' +
       '</div>' +
       '<div id="tr-step2" style="display:none">' +
-        '<input id="tr-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code">' +
+        '<input id="tr-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter your code">' +
         '<button id="tr-verify" class="tr-primary">Verify &amp; sign in</button>' +
         '<button id="tr-back" class="tr-link">Use a different email</button>' +
       '</div>' +
@@ -121,7 +121,7 @@
         self.disabled = false;
         if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; return; }
         currentEmail = email;
-        document.getElementById("tr-lead").textContent = "We emailed a 6-digit code to " + email + ". Enter it below.";
+        document.getElementById("tr-lead").textContent = "We emailed a code to " + email + ". Enter it below.";
         show(2); msg.textContent = ""; document.getElementById("tr-otp").focus();
       });
     };
@@ -136,7 +136,7 @@
       });
     };
     document.getElementById("tr-back").onclick = function () {
-      document.getElementById("tr-lead").textContent = "Save your progress and unlock your books on any device. We'll email you a 6-digit code — no password.";
+      document.getElementById("tr-lead").textContent = "Save your progress and unlock your books on any device. We'll email you a login code — no password.";
       show(1); msg.textContent = ""; emailInput.focus();
     };
     emailInput.focus();
