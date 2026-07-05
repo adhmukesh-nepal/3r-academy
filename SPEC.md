@@ -61,6 +61,10 @@ Remaining (full detail in the plan file `~/.claude/plans/i-am-trying-to-expressi
 - **Tier 2:** signed-in **Home dashboard** (continue studying, cards due, streak/goal, ranking
   snapshot, exam countdown — reuse `getProg`, SRS due logic, `book_ranking`); progress rings on
   chapter/book cards; small **SVG icon set**; typography scale pass.
+  - **Sync streak + daily goal to the account** (cross-device): today they live only in
+    `localStorage` (`tr_streak`, `tr_goal`); persist to a Supabase table so the streak follows the
+    student across devices and survives a cache clear. Merge local ↔ server on sign-in like
+    progress/entitlements. Recorded in `recordActivity()` (app.js).
 - **Tier 3:** exam countdown, badges/achievements, anonymous league tiers (keep percentile-only
   privacy), TikTok-style swipe review mode.
 
