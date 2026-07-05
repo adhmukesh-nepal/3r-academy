@@ -84,8 +84,25 @@
     });
   }
 
+  // streak + daily-goal strip at the top of the home exams section
+  function renderStudyStrip() {
+    var section = document.getElementById("exams");
+    if (!section) return;
+    var s = streakInfo(), existing = document.getElementById("study-strip");
+    if (!s.count && !s.cards && !s.quizzes) { if (existing) existing.remove(); return; }
+    var goalText = s.goalMet ? "✓ Daily goal done" : "Daily goal · " + s.cards + "/" + DAILY_CARD_GOAL + " cards";
+    var el = existing || document.createElement("div");
+    el.id = "study-strip"; el.className = "study-strip";
+    el.innerHTML =
+      '<div class="streak"><span class="flame">🔥</span> ' + s.count + '-day streak</div>' +
+      '<div class="goal ' + (s.goalMet ? "done" : "") + '">' + goalText +
+      '<span class="goalbar"><span style="width:' + s.goalPct + '%"></span></span></div>';
+    if (!existing) section.insertBefore(el, section.firstChild);
+  }
+
   /* ---------- HOME: book grid + track filter ---------- */
   function renderHome() {
+    renderStudyStrip();
     var grid = document.getElementById("examGrid");
     var filterBar = document.getElementById("examFilter");
 
@@ -392,12 +409,18 @@
         starBtn.textContent = starred ? "★ Starred" : "☆ Star";
         starBtn.classList.toggle("on", starred);
       }
-      function flip() { flipped = !flipped; render(); }
+      var animating = false;
+      function flip() {
+        if (animating || !keys.length) return;
+        animating = true; cardEl.classList.add("flip-anim");
+        setTimeout(function () { flipped = !flipped; render(); cardEl.classList.remove("flip-anim"); animating = false; }, 160);
+      }
       function next() { pos = (pos + 1) % keys.length; flipped = false; render(); }
       function prev() { pos = (pos - 1 + keys.length) % keys.length; flipped = false; render(); }
       function shuffle() { for (var i = keys.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = keys[i]; keys[i] = keys[j]; keys[j] = t; } pos = 0; flipped = false; render(); }
       function rate(r) {
         if (!keys.length) return;
+        recordActivity("card");
         rateCard(p, curKey(), r); setProg(id, n, p);
         pos = (pos + 1) % keys.length; flipped = false; buildTabs(); render();
       }
@@ -464,6 +487,70 @@
     Object.keys(p.cards).forEach(function (k) { if (isDue(p.cards[k])) due++; });
     return { totalCards: totalCards, seen: Math.min(seen, totalCards), due: due,
              pct: totalCards ? Math.round(Math.min(seen, totalCards) / totalCards * 100) : 0 };
+  }
+
+  /* ---------- streak + daily goal (local, no backend) ---------- */
+  var DAILY_CARD_GOAL = 20;
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch (e) { return {}; } }
+  function recordActivity(kind) {
+    var t = today();
+    var s = lsGet("tr_streak");
+    if (s.last !== t) { s.count = (s.last === t - 1) ? (s.count || 0) + 1 : 1; s.last = t; localStorage.setItem("tr_streak", JSON.stringify(s)); }
+    var g = lsGet("tr_goal");
+    if (g.day !== t) g = { day: t, cards: 0, quizzes: 0 };
+    if (kind === "card") g.cards = (g.cards || 0) + 1; else if (kind === "quiz") g.quizzes = (g.quizzes || 0) + 1;
+    localStorage.setItem("tr_goal", JSON.stringify(g));
+  }
+  function streakInfo() {
+    var t = today(), s = lsGet("tr_streak"), g = lsGet("tr_goal");
+    var count = (s.last === t || s.last === t - 1) ? (s.count || 0) : 0; // streak lapses if a day was missed
+    var cards = (g.day === t ? g.cards : 0) || 0, quizzes = (g.day === t ? g.quizzes : 0) || 0;
+    var goalMet = quizzes > 0 || cards >= DAILY_CARD_GOAL;
+    var goalPct = goalMet ? 100 : Math.min(100, Math.round(cards / DAILY_CARD_GOAL * 100));
+    return { count: count, cards: cards, quizzes: quizzes, goalMet: goalMet, goalPct: goalPct };
+  }
+
+  /* ---------- small effects: count-up + confetti ---------- */
+  function countUp(el, to, ms) {
+    if (!el) return; var start = null, from = 0;
+    function step(ts) { if (!start) start = ts; var p = Math.min(1, (ts - start) / ms);
+      el.textContent = Math.round(from + (to - from) * p) + el.getAttribute("data-suffix");
+      if (p < 1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+  function confetti() {
+    var c = document.createElement("div"); c.className = "confetti";
+    var cols = ["#1F6F8B", "#548235", "#BF8F00", "#7360F2", "#e2574c"];
+    for (var i = 0; i < 40; i++) {
+      var s = document.createElement("i");
+      s.style.left = Math.random() * 100 + "vw";
+      s.style.background = cols[i % cols.length];
+      s.style.animationDuration = (1.6 + Math.random() * 1.4) + "s";
+      s.style.animationDelay = (Math.random() * 0.5) + "s";
+      s.style.transform = "rotate(" + (Math.random() * 360) + "deg)";
+      c.appendChild(s);
+    }
+    document.body.appendChild(c);
+    setTimeout(function () { c.remove(); }, 3200);
+  }
+
+  /* ---------- dark-mode toggle (data-theme already set by the head script) ---------- */
+  function initTheme() {
+    var wrap = document.querySelector(".topbar .wrap");
+    if (!wrap || document.getElementById("tr-theme")) return;
+    var btn = document.createElement("button");
+    btn.id = "tr-theme"; btn.className = "theme-toggle"; btn.type = "button"; btn.title = "Toggle dark mode";
+    function cur() { return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+    function paint() { btn.textContent = cur() === "dark" ? "☀️" : "🌙"; }
+    paint();
+    btn.onclick = function () {
+      var next = cur() === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("theme", next); } catch (e) {}
+      var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", next === "dark" ? "#12242c" : "#16323d");
+      paint();
+    };
+    wrap.appendChild(btn);
   }
 
   /* ---------- QUIZ / MCQ mode ---------- */
@@ -606,8 +693,10 @@
               else if (item.q.options.some(function (o) { return o.correct; }) && p.weakMcqs.indexOf(item.oi) === -1) p.weakMcqs.push(item.oi);
             });
           }
+          var prevPct = (p.quiz && typeof p.quiz.lastScore === "number") ? Math.round(p.quiz.lastScore / total * 100) : null;
           // record quiz stats only for full-chapter runs
           if (mode === "study" || mode === "timed") {
+            recordActivity("quiz");
             p.quiz = p.quiz || { attempts: 0, best: 0 };
             p.quiz.attempts = (p.quiz.attempts || 0) + 1;
             p.quiz.total = total; p.quiz.lastScore = score;
@@ -619,8 +708,14 @@
           var isTest = ch.kind === "test";
           var backHref = isTest ? "/book.html?book=" + encodeURIComponent(id)
                                 : "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n;
-          var html = '<div class="result"><div>Your score</div><div class="big">' + score + ' / ' + total + '</div>' +
-                     '<div class="pct">' + pct + '% correct</div>' +
+          var delta = "";
+          if (prevPct !== null && (mode === "study" || mode === "timed")) {
+            var d = pct - prevPct;
+            delta = '<div class="delta ' + (d >= 0 ? "up" : "down") + '">' + (d >= 0 ? "▲ +" : "▼ ") + Math.abs(d) + "% vs your last attempt</div>";
+          }
+          var html = '<div class="result"><div>Your score</div>' +
+                     '<div class="big" id="qBig" data-suffix=" / ' + total + '">0 / ' + total + '</div>' +
+                     '<div class="pct">' + pct + '% correct</div>' + delta +
                      '<div id="qRank" class="qrank"></div>' +
                      '<div class="actions"><button id="qRetry">Try again</button>' +
                      '<a href="' + backHref + '">' + (isTest ? "Back to book" : "Back to chapter") + '</a></div></div>';
@@ -639,6 +734,8 @@
             html += '</div>';
           }
           root.innerHTML = html;
+          countUp(document.getElementById("qBig"), score, 600);
+          if (pct >= 80) confetti();
           var retry = document.getElementById("qRetry");
           if (retry) retry.onclick = function () { var np = computePool(); if (np.length) runQuiz(np); else initQuiz(); };
           if (mode === "timed") showRanking();
@@ -695,6 +792,7 @@
   }
   document.addEventListener("DOMContentLoaded", function () {
     registerSW();
+    initTheme();
     wireViber();
     // "Get free access" becomes the sign-up entry (falls back to the form link if auth unavailable)
     document.querySelectorAll(".btn-get").forEach(function (a) {

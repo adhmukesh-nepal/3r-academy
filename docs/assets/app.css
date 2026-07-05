@@ -247,3 +247,63 @@ footer .qrnote{background:#eef3f5;border:1px dashed var(--line);border-radius:10
   .method{grid-template-columns:1fr}
   ul.rapid{columns:1}
 }
+
+/* ============================ Tier-1 polish ============================ */
+
+/* ---- dark mode (JS sets data-theme on <html>; tokens flip, components follow) ---- */
+[data-theme="dark"]{
+  --ink:#e7eef2; --muted:#9db0b8; --line:#2b3c44; --bg:#0f1c22; --card:#17262d; --header:#12242c;
+}
+[data-theme="dark"] .signup{box-shadow:0 10px 30px rgba(0,0,0,.45)}
+[data-theme="dark"] .signup.signup-bottom{background:var(--card)}
+[data-theme="dark"] .flipcard{box-shadow:0 8px 24px rgba(0,0,0,.45)}
+[data-theme="dark"] .opt{background:var(--card)}
+[data-theme="dark"] .opt.selected{background:#12303c}
+[data-theme="dark"] .opt.correct{background:#173420}
+[data-theme="dark"] .opt.wrong{background:#37201d}
+[data-theme="dark"] .why.correct{color:#8fce9c}
+[data-theme="dark"] .review .rq .ro.correct{color:#8fce9c}
+[data-theme="dark"] .review .rq .ro.wrong{color:#e88b82}
+[data-theme="dark"] footer .qrnote{background:#14242b}
+[data-theme="dark"] .pbadge.done{background:#173420;color:#8fce9c;border-color:#2f5a3a}
+[data-theme="dark"] .pbadge.part{background:#33291a;color:#e6c877;border-color:#5a4a20}
+[data-theme="dark"] .rank-nudge{background:#173420;border-color:#2f5a3a;color:#8fce9c}
+[data-theme="dark"] .result,[data-theme="dark"] .review .rq,[data-theme="dark"] .qcard{box-shadow:0 8px 24px rgba(0,0,0,.4)}
+
+/* theme toggle in the top bar */
+.theme-toggle{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;
+  border-radius:999px;min-width:34px;height:34px;padding:0 10px;font-size:15px;cursor:pointer;line-height:1}
+.theme-toggle:hover{background:rgba(255,255,255,.12)}
+
+/* ---- flashcard flip animation (half-flip: rotate out, swap, rotate in) ---- */
+.flipcard{transition:transform .16s ease, box-shadow .2s ease; transform-style:preserve-3d; will-change:transform}
+.flipcard.flip-anim{transform:rotateY(90deg)}
+
+/* ---- results: score count-up + confetti ---- */
+.result .big{transition:none}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:99998;overflow:hidden}
+.confetti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;opacity:.9;animation:tr-fall linear forwards}
+@keyframes tr-fall{to{transform:translateY(105vh) rotate(540deg);opacity:1}}
+.result .delta{font-size:14px;font-weight:700;margin:2px 0 8px}
+.result .delta.up{color:var(--recall)} .result .delta.down{color:#c0392b}
+[data-theme="dark"] .result .delta.down{color:#e88b82}
+
+/* ---- streak + daily goal strip (home) ---- */
+.study-strip{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:12px 16px;margin:0 0 18px}
+.study-strip .streak{font-weight:700;color:var(--ink);font-size:15px}
+.study-strip .streak .flame{font-size:18px}
+.study-strip .goal{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin-left:auto}
+.study-strip .goalbar{width:120px;height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.study-strip .goalbar > span{display:block;height:100%;background:var(--recall);width:0;transition:width .4s}
+.study-strip .goal.done{color:var(--recall);font-weight:700}
+
+/* ---- thumb-friendly controls + micro-interactions ---- */
+button, .opt, .su-actions a, .exam a.open, .chap a.open, .deck a.btn{transition:filter .12s ease, transform .06s ease, background .12s ease}
+button:active, .opt:active, .su-actions a:active, .exam a.open:active, .chap a.open:active, .deck a.btn:active{transform:scale(.97)}
+@media(max-width:560px){
+  .controls button, .rate button{min-height:48px}
+  .controls .flip{flex:1}
+  .qfoot button{min-height:48px;padding:12px 22px}
+  .mode-card button{min-height:48px}
+}
