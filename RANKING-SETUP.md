@@ -65,7 +65,7 @@ end; $$;
 -- 4. Whole-book ranking for the caller: per chapter + average (readiness) across chapters.
 create or replace function public.book_ranking(p_book text)
 returns json language plpgsql security definer set search_path = public as $$
-declare uid uuid := auth.uid(); rows json; avgp numeric;
+declare uid uuid := auth.uid(); res json; avgp numeric;
 begin
   if uid is null then return json_build_object('signedIn', false); end if;
   with mine as (
@@ -77,15 +77,16 @@ begin
       (select count(*) from public.quiz_scores q where q.book_id=p_book and q.chapter=m.chapter and q.pct < m.pct) as below
     from mine m
   )
-  select json_agg(json_build_object(
+  select
+    coalesce(json_agg(json_build_object(
       'chapter', chapter, 'kind', kind, 'your_pct', your_pct, 'count', cnt,
       'enough', cnt >= 20,
       'percentile', case when cnt >= 20 then round(below::numeric / nullif(cnt-1,0) * 100) else null end
-    ) order by chapter)
-  into rows from calc;
-  select avg(round(below::numeric / nullif(cnt-1,0) * 100))
-  into avgp from calc where kind = 'chapter' and cnt >= 20;
-  return json_build_object('signedIn', true, 'chapters', coalesce(rows, '[]'::json), 'avg_percentile', avgp);
+    ) order by chapter), '[]'::json),
+    avg(round(below::numeric / nullif(cnt-1,0) * 100)) filter (where kind = 'chapter' and cnt >= 20)
+  into res, avgp
+  from calc;
+  return json_build_object('signedIn', true, 'chapters', res, 'avg_percentile', avgp);
 end; $$;
 
 -- 5. Allow signed-in users to call the functions
