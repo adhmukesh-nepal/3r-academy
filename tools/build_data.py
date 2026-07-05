@@ -140,7 +140,8 @@ def build_book(path):
         n = as_int(c.get("n"), "%s: Chapters.n" % where)
         if n is None:
             continue
-        chapters.append({"n": n, "title": cell(c, "title"), "ready": as_bool(c.get("ready"))})
+        chapters.append({"n": n, "title": cell(c, "title"), "ready": as_bool(c.get("ready")),
+                         "kind": (cell(c, "kind") or "chapter").lower()})
     chapters.sort(key=lambda c: c["n"])
 
     book_json = {

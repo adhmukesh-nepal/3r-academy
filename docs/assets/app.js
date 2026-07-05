@@ -147,7 +147,13 @@
       if (book.tagline) setText("tagline", book.tagline);
       document.title = book.name + " · 3R Academy";
       grid.innerHTML = "";
+      var testGrid = document.getElementById("testGrid");
+      var testSection = document.getElementById("tests");
+      if (testGrid) testGrid.innerHTML = "";
+      var tests = [];
+
       (book.chapters || []).forEach(function (c) {
+        if (c.kind === "test") { tests.push(c); return; } // full-length tests go in their own section
         var card = el("div", "chap" + (c.ready ? "" : " soon"));
         var badge = "";
         if (c.ready) {
@@ -168,6 +174,27 @@
           "</div>";
         grid.appendChild(card);
       });
+
+      // full-length mock tests → timed mode (percentile ranking comes later)
+      if (testGrid) {
+        tests.forEach(function (t) {
+          var badge = "";
+          if (t.ready) {
+            var pr = getProg(id, t.n);
+            if (pr.quiz && typeof pr.quiz.best === "number") badge = '<span class="pbadge part">Best ' + pr.quiz.best + "/" + pr.quiz.total + "</span>";
+          }
+          var card = el("div", "chap" + (t.ready ? "" : " soon"));
+          card.innerHTML =
+            '<div><div class="cn">Full-length · timed</div><h4>' + esc(t.title) + badge + "</h4></div>" +
+            '<div class="row">' +
+            (t.ready
+              ? '<span></span><a class="open" href="/quiz.html?book=' + encodeURIComponent(id) + "&ch=" + t.n + '&mode=timed">Start test →</a>'
+              : '<span class="badge">Coming soon</span>') +
+            "</div>";
+          testGrid.appendChild(card);
+        });
+        if (testSection) testSection.style.display = tests.length ? "" : "none";
+      }
     }).catch(function () { showError(grid, "Couldn't load this book. Check the link and try again."); });
   }
 

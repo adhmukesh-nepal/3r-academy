@@ -117,7 +117,7 @@ converter. **You never touch JSON or code.**
 | Sheet | Columns (header row) | Notes |
 |---|---|---|
 | `Book` | `id, name, board, desc, code, ready, title, edition, tagline, order, category` | one row; `id` is lowercase-kebab (`ph-officer`); `name` = short catalog name, `title` = full book title on the book page; `ready`/`order` control the home grid; `category` = the exam track (`loksewa` / `license` / `entrance`) that drives the home-page filter chips; `ready` = `TRUE`/`FALSE` |
-| `Chapters` | `n, title, ready` | one row per chapter |
+| `Chapters` | `n, title, ready, kind` | one row per chapter. `kind` blank/`chapter` = normal chapter; `kind = test` = a **full-length mock test** (shown in its own "Full-length mock tests" section, opens straight into timed mode). Give tests a distinct `n` (e.g. 101) and put their questions in the `MCQs` sheet with `chapter = 101`. |
 | `Notes` | `chapter, note` | one row per one-liner; `chapter` = the chapter number |
 | `Flashcards` | `chapter, deck_id, deck_name, deck_desc, front, back` | one row per card; rows sharing a `deck_id` form a deck (deck_name/deck_desc taken from the first row of that deck) |
 | `MCQs` | `chapter, question, correct, option1, why1, option2, why2, option3, why3, option4, why4` | `correct` = which option number (1–4) is right |
