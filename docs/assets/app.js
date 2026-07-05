@@ -727,7 +727,7 @@
                 var cls = o.correct ? "correct" : (j === answers[k] ? "wrong" : "");
                 var mark = o.correct ? "✓ " : (j === answers[k] ? "✗ " : "");
                 html += '<div class="ro ' + cls + '">' + mark + LETTERS[j] + ". " + esc(o.text) +
-                        ((o.correct || j === answers[k]) ? '<span class="w">' + esc(o.why) + '</span>' : "") + '</div>';
+                        '<span class="w">' + esc(o.why) + '</span></div>'; // show every option's rationale
               });
               html += '</div>';
             });
