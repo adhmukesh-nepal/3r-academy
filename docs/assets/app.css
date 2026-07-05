@@ -69,6 +69,7 @@ header.hero.left p.lead{margin-left:0}
 /* ---- sign-up card ---- */
 .signup{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin:-22px auto 30px;
   max-width:var(--maxw);box-shadow:0 10px 30px rgba(20,50,61,.10)}
+.signup.signup-bottom{margin:28px auto 10px;box-shadow:none;background:#f0f4f6}
 .signup h2{margin:0 0 4px;font-size:19px}
 .signup p{margin:0 0 14px;color:var(--muted);font-size:14px}
 .su-actions{display:flex;gap:12px;flex-wrap:wrap}

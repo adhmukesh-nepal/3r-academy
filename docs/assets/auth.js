@@ -294,11 +294,26 @@
     };
   }
 
+  // When signed in, the "Get free access / sign up" card is redundant — slim it to a
+  // Viber invite and move it to the bottom so it doesn't distract from studying.
+  function placeSignup() {
+    var card = document.getElementById("signup");
+    if (!card || !TR.user || card.dataset.moved) return;
+    var get = card.querySelector(".btn-get"); if (get) get.style.display = "none";
+    var h = card.querySelector("h2"); if (h) h.textContent = "Join our study community";
+    var p = card.querySelector("p"); if (p) p.textContent = "Get exam alerts and study tips — join our Viber group.";
+    card.classList.add("signup-bottom");
+    var parent = card.parentNode, footer = parent ? parent.querySelector("footer") : null;
+    if (footer) parent.insertBefore(card, footer); else if (parent) parent.appendChild(card);
+    card.dataset.moved = "1";
+  }
+
   /* ---- react to auth state ---- */
   function setSession(session) {
     TR.session = session || null;
     TR.user = session ? session.user : null;
     renderAcct();
+    placeSignup();
   }
 
   document.addEventListener("DOMContentLoaded", function () {

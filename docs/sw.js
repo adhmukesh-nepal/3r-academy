@@ -6,7 +6,7 @@
      • page navigations → network-first, fall back to cache, then to "/"
    IMPORTANT: bump CACHE when you change any precached file so users update.
    ========================================================================= */
-var CACHE = "3r-v12";
+var CACHE = "3r-v13";
 var CORE = [
   "/", "/index.html", "/book.html", "/chapter.html", "/flashcards.html", "/quiz.html", "/privacy.html",
   "/assets/app.css", "/assets/app.js", "/assets/config.js", "/assets/supabase.js", "/assets/auth.js", "/gate.js",
