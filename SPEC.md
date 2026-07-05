@@ -73,6 +73,68 @@ reusing Phase B's `content` function to also check subscription state).
 
 - **Effort:** high (payment integration + webhooks + billing UI + subscription checks).
 
+## 🔜 Percentile ranking + full-length tests — APPROVED, NOT built yet
+Turns the app into a learning ladder: practise chapters and watch your percentile climb, then
+graduate to a one-shot full-length timed exam. Requires accounts (have them); backend feature.
+
+**Confirmed decisions**
+- Ranking uses **timed attempts only** (Study mode stays unranked practice).
+- **Chapter percentile → most-recent timed score** (overwrite each attempt; rewards improvement).
+- **Full-length test percentile → first timed attempt, locked** (honest, exam-like; can't be ground).
+- Compared **within the same book**; **percentile-only** (no names/leaderboard).
+- Show a percentile only once a chapter/test has **≥ 20 candidates**.
+- **Soft nudge** (never a hard gate) to the full-length test when the candidate's **average chapter
+  percentile ≥ 60** ("top 40% — you're ready for the full-length exam").
+- Full-length tests already exist as `kind=test` chapters (open straight into timed mode).
+
+**Data model (Supabase)**
+```sql
+create table public.quiz_scores (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  book_id text not null,
+  chapter int not null,               -- chapter number, or test number (e.g. 101)
+  kind text not null default 'chapter', -- 'chapter' | 'test'
+  score int not null, total int not null,
+  pct numeric not null,               -- score/total*100 (for aggregation)
+  taken_at timestamptz not null default now(),
+  primary key (user_id, book_id, chapter)
+);
+alter table public.quiz_scores enable row level security;
+-- users may READ only their own rows; WRITES go only through submit_score() (below)
+create policy "own scores read" on public.quiz_scores for select using (auth.uid() = user_id);
+```
+
+**Functions (SECURITY DEFINER — enforce rules + keep others' rows private)**
+- `submit_score(book, chapter, kind, score, total)` — computes pct; **chapter** → upsert (overwrite
+  latest); **test** → insert only if no row exists (locks first attempt). Runs as `auth.uid()`.
+- `chapter_percentile(book, chapter)` → returns `{count, enough, percentile, your_pct}` for the
+  caller ("ahead of X% of N candidates"); `enough=false` when count < 20. Never returns others' rows.
+- `book_ranking(book)` → per-chapter `{chapter, your_pct, percentile, count}` for the caller's
+  attempted chapters **plus** `avg_percentile` (readiness) — one call powers the "My ranking" panel.
+
+**Converter change**
+- Emit `kind` into each chapter's JSON (so `quiz.html` knows chapter-vs-test → which write rule).
+
+**Client (app.js)**
+- On a **timed full run finishing** (not weak/starred sub-runs) and **if signed in**: call
+  `submit_score(...)`, then `chapter_percentile(...)`, and show it on the results screen
+  (e.g. "82% — ahead of 76% of candidates 🎯"; or "Not enough candidates yet — N so far").
+  Not signed in → "Sign in to see how you rank."
+- **"My ranking" panel** on the book page: call `book_ranking(book)` → per-chapter percentile bars +
+  an overall readiness meter; when `avg_percentile ≥ 60`, highlight the full-length test CTA.
+
+**Build order**
+1. SQL: `quiz_scores` + RLS + the three functions (run in SQL Editor; documented like SUPABASE-SETUP).
+2. Converter: add `kind` to chapter JSON; rebuild.
+3. Client: submit score + show percentile on the timed results screen.
+4. Client: "My ranking" panel + readiness nudge on the book page.
+5. Min-N messaging + positive framing; verify end-to-end.
+
+**Notes / honest limits:** percentile is recomputed live at query time (chapter distributions shift
+as everyone improves — intended). Chapters are overwrite (measures current mastery); the full-test
+first attempt is server-locked so it can't be ground. Only affects the caller's own displayed rank;
+no one can read others' scores.
+
 ## How to resume later
 Tell a new session: *"Read SPEC.md → BUILD STATUS & ROADMAP, then start Phase B"* (or C). The
 prerequisites, file touch-points, and schema additions are listed above. For now the project runs
