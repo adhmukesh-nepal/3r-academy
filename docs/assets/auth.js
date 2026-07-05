@@ -87,59 +87,108 @@
     ov.id = "tr-modal"; ov.className = "tr-modal";
     ov.innerHTML =
       '<div class="tr-box"><button class="tr-x" id="tr-x">×</button>' +
-      '<h3>Sign in to 3R Academy</h3>' +
-      '<p id="tr-lead">Save your progress and unlock your books on any device. We\'ll email you a login code — no password.</p>' +
-      '<div id="tr-step1">' +
-        '<input id="tr-email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">' +
-        '<button id="tr-send" class="tr-primary">Email me a code</button>' +
-      '</div>' +
-      '<div id="tr-step2" style="display:none">' +
-        '<input id="tr-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter your code">' +
-        '<button id="tr-verify" class="tr-primary">Verify &amp; sign in</button>' +
-        '<button id="tr-back" class="tr-link">Use a different email</button>' +
-      '</div>' +
+      '<h3 id="tr-title">Sign in to 3R Academy</h3>' +
+      '<p id="tr-lead"></p>' +
+      '<div id="tr-body"></div>' +
       '<div id="tr-msg" class="tr-msg"></div></div>';
     document.body.appendChild(ov);
     var close = function () { ov.remove(); };
     document.getElementById("tr-x").onclick = close;
     ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    var body = document.getElementById("tr-body"),
+        msg = document.getElementById("tr-msg"),
+        lead = document.getElementById("tr-lead"),
+        title = document.getElementById("tr-title");
+    function gv(id) { var e = document.getElementById(id); return e ? (e.value || "").trim() : ""; }
+    function setMsg(t, cls) { msg.textContent = t || ""; msg.className = "tr-msg" + (cls ? " " + cls : ""); }
 
-    var msg = document.getElementById("tr-msg");
-    var emailInput = document.getElementById("tr-email");
-    var currentEmail = "";
-    function show(step) {
-      document.getElementById("tr-step1").style.display = (step === 1) ? "" : "none";
-      document.getElementById("tr-step2").style.display = (step === 2) ? "" : "none";
+    function renderPassword() {
+      title.textContent = "Sign in to 3R Academy";
+      lead.textContent = "Sign in to save your progress and open your books on any device.";
+      body.innerHTML =
+        '<input id="tr-email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">' +
+        '<input id="tr-pass" type="password" placeholder="Password" autocomplete="current-password">' +
+        '<button id="tr-signin" class="tr-primary">Sign in</button>' +
+        '<button id="tr-tocreate" class="tr-link">New here? Create an account</button>' +
+        '<button id="tr-tootp" class="tr-link">Email me a code instead / forgot password</button>';
+      setMsg("");
+      document.getElementById("tr-signin").onclick = function () {
+        var email = gv("tr-email"), pass = gv("tr-pass");
+        if (!email || !pass) { setMsg("Enter your email and password.", "err"); return; }
+        this.disabled = true; setMsg("Signing in…"); var self = this;
+        client.auth.signInWithPassword({ email: email, password: pass }).then(function (r) {
+          if (r.error) { setMsg(r.error.message, "err"); self.disabled = false; } else close();
+        });
+      };
+      document.getElementById("tr-tocreate").onclick = renderCreate;
+      document.getElementById("tr-tootp").onclick = renderOtpEmail;
+      var e = document.getElementById("tr-email"); if (e) e.focus();
     }
 
-    document.getElementById("tr-send").onclick = function () {
-      var email = (emailInput.value || "").trim();
-      if (!email) return;
-      this.disabled = true; msg.textContent = "Sending…"; msg.className = "tr-msg";
-      var self = this;
-      client.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } }).then(function (r) {
-        self.disabled = false;
-        if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; return; }
-        currentEmail = email;
-        document.getElementById("tr-lead").textContent = "We emailed a code to " + email + ". Enter it below.";
-        show(2); msg.textContent = ""; document.getElementById("tr-otp").focus();
-      });
-    };
-    document.getElementById("tr-verify").onclick = function () {
-      var token = (document.getElementById("tr-otp").value || "").replace(/\s/g, "");
-      if (!token) return;
-      this.disabled = true; msg.textContent = "Verifying…"; msg.className = "tr-msg";
-      var self = this;
-      client.auth.verifyOtp({ email: currentEmail, token: token, type: "email" }).then(function (r) {
-        if (r.error) { msg.textContent = r.error.message; msg.className = "tr-msg err"; self.disabled = false; }
-        else { close(); } // onAuthStateChange handles the session + sync
-      });
-    };
-    document.getElementById("tr-back").onclick = function () {
-      document.getElementById("tr-lead").textContent = "Save your progress and unlock your books on any device. We'll email you a login code — no password.";
-      show(1); msg.textContent = ""; emailInput.focus();
-    };
-    emailInput.focus();
+    function renderCreate() {
+      title.textContent = "Create your account";
+      lead.textContent = "Pick a password (6+ characters). One sign-up unlocks everything.";
+      body.innerHTML =
+        '<input id="tr-email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">' +
+        '<input id="tr-pass" type="password" placeholder="Create a password" autocomplete="new-password">' +
+        '<button id="tr-create" class="tr-primary">Create account</button>' +
+        '<button id="tr-toback" class="tr-link">Already have an account? Sign in</button>';
+      setMsg("");
+      document.getElementById("tr-create").onclick = function () {
+        var email = gv("tr-email"), pass = gv("tr-pass");
+        if (!email || pass.length < 6) { setMsg("Enter an email and a password of at least 6 characters.", "err"); return; }
+        this.disabled = true; setMsg("Creating your account…"); var self = this;
+        client.auth.signUp({ email: email, password: pass }).then(function (r) {
+          if (r.error) { setMsg(r.error.message, "err"); self.disabled = false; return; }
+          if (r.data && r.data.session) { close(); } // signed in immediately (email confirmation off)
+          else { setMsg("Account created — check your email to confirm, then sign in.", "ok"); self.disabled = false; }
+        });
+      };
+      document.getElementById("tr-toback").onclick = renderPassword;
+      document.getElementById("tr-email").focus();
+    }
+
+    function renderOtpEmail() {
+      title.textContent = "Sign in with an email code";
+      lead.textContent = "We'll email you a one-time code — useful if you forgot your password.";
+      body.innerHTML =
+        '<input id="tr-email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">' +
+        '<button id="tr-send" class="tr-primary">Email me a code</button>' +
+        '<button id="tr-toback" class="tr-link">Back to password sign-in</button>';
+      setMsg("");
+      document.getElementById("tr-send").onclick = function () {
+        var email = gv("tr-email"); if (!email) return;
+        this.disabled = true; setMsg("Sending…"); var self = this;
+        client.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } }).then(function (r) {
+          self.disabled = false;
+          if (r.error) { setMsg(r.error.message, "err"); return; }
+          renderOtpCode(email);
+        });
+      };
+      document.getElementById("tr-toback").onclick = renderPassword;
+      document.getElementById("tr-email").focus();
+    }
+
+    function renderOtpCode(email) {
+      title.textContent = "Enter your code";
+      lead.textContent = "We emailed a code to " + email + ".";
+      body.innerHTML =
+        '<input id="tr-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter your code">' +
+        '<button id="tr-verify" class="tr-primary">Verify &amp; sign in</button>' +
+        '<button id="tr-toback" class="tr-link">Use a different email</button>';
+      setMsg("");
+      document.getElementById("tr-verify").onclick = function () {
+        var token = gv("tr-otp").replace(/\s/g, ""); if (!token) return;
+        this.disabled = true; setMsg("Verifying…"); var self = this;
+        client.auth.verifyOtp({ email: email, token: token, type: "email" }).then(function (r) {
+          if (r.error) { setMsg(r.error.message, "err"); self.disabled = false; } else close();
+        });
+      };
+      document.getElementById("tr-toback").onclick = renderOtpEmail;
+      document.getElementById("tr-otp").focus();
+    }
+
+    renderPassword();
   }
   TR.openSignIn = function () { openModal(); }; // used by "Get free access" CTA
 

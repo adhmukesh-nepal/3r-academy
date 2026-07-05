@@ -56,6 +56,17 @@ Supabase → **Authentication → URL Configuration**:
 - **Site URL:** `https://3r.mukeshadhikari.com`
 - **Redirect URLs:** `https://3r.mukeshadhikari.com/**`
 
+## Password login (primary) — one setting
+The sign-in modal is **email + password** first, with an **email-code fallback** (also used for
+"forgot password"). Sessions persist, so users stay signed in and browsers can save the password
+("remember me"). For password **sign-up to log the user in instantly** (no email-confirmation
+click), turn confirmation off:
+- Supabase → **Authentication → Providers → Email** → turn **"Confirm email" OFF** → Save.
+- Trade-off: emails aren't verified at signup (a user could mistype). The email-code path still
+  verifies ownership, and you have consent + can email them. If you'd rather verify every email,
+  leave "Confirm email" ON — new password accounts then must click a confirmation link first.
+- Existing code-only accounts (no password) keep using **"Email me a code"**.
+
 ## Test
 1. `https://3r.mukeshadhikari.com` → **Sign in** → email → **Email me a code**.
 2. Email arrives from `noreply@mukeshadhikari.com` with a code → type it → **Verify & sign in**.
