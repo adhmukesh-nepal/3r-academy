@@ -169,6 +169,7 @@ def build_book(path):
 
     chapter_json = {}
     chap_titles = {c["n"]: c["title"] for c in chapters}
+    chap_kind = {c["n"]: c.get("kind", "chapter") for c in chapters}
     involved = set(notes_by) | set(cards_by) | set(mcqs_by) | set(videos_by)
     involved |= {c["n"] for c in chapters if c["ready"]}
 
@@ -220,6 +221,7 @@ def build_book(path):
 
         chapter_json[n] = {
             "book": bid, "number": n, "title": chap_titles.get(n, "Chapter %d" % n),
+            "kind": chap_kind.get(n, "chapter"),
             "videos": videos, "notes": notes, "decks": deck_list, "mcqs": mcqs,
         }
 

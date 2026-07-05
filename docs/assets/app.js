@@ -195,7 +195,37 @@
         });
         if (testSection) testSection.style.display = tests.length ? "" : "none";
       }
+      renderRanking(id, book);
     }).catch(function () { showError(grid, "Couldn't load this book. Check the link and try again."); });
+  }
+
+  // "My ranking" panel: per-chapter/test percentiles + readiness nudge (signed-in only).
+  function renderRanking(id, book) {
+    var section = document.getElementById("ranking"), body = document.getElementById("rankingBody");
+    if (!section || !body) return;
+    if (!(window.TR && window.TR.session && window.TR.client)) { section.style.display = "none"; return; }
+    var titles = {}; (book.chapters || []).forEach(function (c) { titles[c.n] = c; });
+    window.TR.client.rpc("book_ranking", { p_book: id }).then(function (res) {
+      var d = res && res.data;
+      if (!d || !d.signedIn || !d.chapters || !d.chapters.length) { section.style.display = "none"; return; }
+      var html = "";
+      d.chapters.forEach(function (r) {
+        var c = titles[r.chapter] || {};
+        var label = c.kind === "test" ? (c.title || "Full-length test") : ("Ch " + r.chapter + (c.title ? " · " + c.title : ""));
+        var val, w;
+        if (r.enough) { val = "Top " + Math.max(1, 100 - r.percentile) + "% of " + r.count; w = r.percentile; }
+        else { val = "You: " + r.your_pct + "% · rank at 20+"; w = 0; }
+        html += '<div class="rank-row"><div class="rank-label">' + esc(label) + '</div>' +
+                '<div class="rank-bar"><span style="width:' + w + '%"></span></div>' +
+                '<div class="rank-val">' + esc(val) + '</div></div>';
+      });
+      if (typeof d.avg_percentile === "number" && d.avg_percentile >= 60) {
+        html += '<div class="rank-nudge">🚀 You\'re in the top ' + Math.max(1, 100 - Math.round(d.avg_percentile)) +
+                '% across chapters — you\'re ready for a full-length mock test!</div>';
+      }
+      body.innerHTML = html;
+      section.style.display = "";
+    }).catch(function () { section.style.display = "none"; });
   }
 
   /* ---------- CHAPTER: revision station ---------- */
@@ -586,10 +616,14 @@
           setProg(id, n, p);
 
           var pct = Math.round(score / total * 100);
+          var isTest = ch.kind === "test";
+          var backHref = isTest ? "/book.html?book=" + encodeURIComponent(id)
+                                : "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n;
           var html = '<div class="result"><div>Your score</div><div class="big">' + score + ' / ' + total + '</div>' +
                      '<div class="pct">' + pct + '% correct</div>' +
+                     '<div id="qRank" class="qrank"></div>' +
                      '<div class="actions"><button id="qRetry">Try again</button>' +
-                     '<a href="/chapter.html?book=' + encodeURIComponent(id) + '&ch=' + n + '">Back to chapter</a></div></div>';
+                     '<a href="' + backHref + '">' + (isTest ? "Back to book" : "Back to chapter") + '</a></div></div>';
           if (behavior === "timed") {
             html += '<h3 style="margin:26px 0 4px;font-size:18px">Review</h3><div class="review">';
             pool.forEach(function (item, k) {
@@ -607,6 +641,34 @@
           root.innerHTML = html;
           var retry = document.getElementById("qRetry");
           if (retry) retry.onclick = function () { var np = computePool(); if (np.length) runQuiz(np); else initQuiz(); };
+          if (mode === "timed") showRanking();
+        }
+
+        // Submit the timed score and show the caller's percentile (chapters=recent, tests=first attempt).
+        function showRanking() {
+          var rankEl = document.getElementById("qRank");
+          if (!rankEl) return;
+          if (!(window.TR && window.TR.session && window.TR.client)) {
+            rankEl.innerHTML = '<a href="#" id="qRankSignin">Sign in to see how you rank</a>';
+            var s = document.getElementById("qRankSignin");
+            if (s) s.onclick = function (e) { e.preventDefault(); if (window.TR.openSignIn) window.TR.openSignIn(); };
+            return;
+          }
+          rankEl.textContent = "Checking your ranking…";
+          var kind = ch.kind === "test" ? "test" : "chapter", chNum = parseInt(n, 10);
+          window.TR.client.rpc("submit_score", { p_book: id, p_chapter: chNum, p_kind: kind, p_score: score, p_total: total })
+            .then(function () { return window.TR.client.rpc("chapter_percentile", { p_book: id, p_chapter: chNum }); })
+            .then(function (res) {
+              var d = res && res.data;
+              if (!d || !d.signedIn) { rankEl.style.display = "none"; return; }
+              if (d.enough) {
+                rankEl.innerHTML = "🎯 You're ahead of <b>" + d.percentile + "%</b> of " + d.count + " candidates" +
+                  (kind === "test" ? ' <span class="muted">(first attempt)</span>' : "") + ".";
+              } else {
+                rankEl.innerHTML = 'Your ranking unlocks once <b>20</b> candidates have taken this — <b>' + (d.count || 0) + "</b> so far.";
+              }
+            })
+            .catch(function () { rankEl.style.display = "none"; });
         }
       }
     }).catch(function () { showError(root, "Couldn't load this chapter's questions."); });
