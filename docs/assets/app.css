@@ -275,6 +275,13 @@ footer .qrnote{background:#eef3f5;border:1px dashed var(--line);border-radius:10
   border-radius:999px;min-width:34px;height:34px;padding:0 10px;font-size:15px;cursor:pointer;line-height:1}
 .theme-toggle:hover{background:rgba(255,255,255,.12)}
 
+/* feedback button (pilot) */
+.fb-btn{position:fixed;right:14px;bottom:14px;z-index:9000;background:var(--header);color:#fff;border:0;
+  border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);opacity:.92}
+.fb-btn:hover{opacity:1}
+.tr-modal textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;color:var(--ink);background:var(--card)}
+
 /* ---- flashcard flip animation (half-flip: rotate out, swap, rotate in) ---- */
 .flipcard{transition:transform .16s ease, box-shadow .2s ease; transform-style:preserve-3d; will-change:transform}
 .flipcard.flip-anim{transform:rotateY(90deg)}

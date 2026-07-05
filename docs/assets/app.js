@@ -553,6 +553,55 @@
     wrap.appendChild(btn);
   }
 
+  /* ---------- feedback + error logging (pilot) ---------- */
+  function trFeedback(kind, message) {
+    try {
+      var c = window.TR && window.TR.client; if (!c) return Promise.resolve({});
+      var u = window.TR.user;
+      return c.from("feedback").insert({
+        user_id: u ? u.id : null, email: u ? u.email : null, kind: kind,
+        message: String(message || "").slice(0, 2000),
+        page: (location.pathname + location.search).slice(0, 300),
+        ua: navigator.userAgent.slice(0, 300)
+      });
+    } catch (e) { return Promise.resolve({}); }
+  }
+  var _errCount = 0;
+  function logError(msg) { if (_errCount >= 5) return; _errCount++; trFeedback("error", msg).then(function () {}, function () {}); }
+  window.addEventListener("error", function (e) { logError((e.message || "error") + " @ " + (e.filename || "") + ":" + (e.lineno || "")); });
+  window.addEventListener("unhandledrejection", function (e) { logError("promise: " + ((e.reason && e.reason.message) || e.reason || "")); });
+
+  function initFeedback() {
+    if (document.getElementById("tr-fb-btn")) return;
+    var btn = document.createElement("button");
+    btn.id = "tr-fb-btn"; btn.className = "fb-btn"; btn.type = "button"; btn.textContent = "💬 Feedback";
+    btn.onclick = openFeedback;
+    document.body.appendChild(btn);
+  }
+  function openFeedback() {
+    if (document.getElementById("tr-fb")) return;
+    var ov = document.createElement("div"); ov.id = "tr-fb"; ov.className = "tr-modal";
+    ov.innerHTML = '<div class="tr-box"><button class="tr-x" id="fb-x">×</button>' +
+      '<h3>Send feedback</h3><p>Found a bug or have a suggestion? Tell us — it helps improve 3R Academy.</p>' +
+      '<textarea id="fb-msg" rows="4" placeholder="What happened, or your idea…"></textarea>' +
+      '<button id="fb-send" class="tr-primary">Send</button>' +
+      '<div id="fb-out" class="tr-msg"></div></div>';
+    document.body.appendChild(ov);
+    var close = function () { ov.remove(); };
+    document.getElementById("fb-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    var out = document.getElementById("fb-out");
+    document.getElementById("fb-send").onclick = function () {
+      var m = (document.getElementById("fb-msg").value || "").trim(); if (!m) return;
+      this.disabled = true; out.textContent = "Sending…"; out.className = "tr-msg"; var self = this;
+      trFeedback("feedback", m).then(function (r) {
+        if (r && r.error) { out.textContent = "Couldn't send — please try again."; out.className = "tr-msg err"; self.disabled = false; }
+        else { out.textContent = "Thanks! 🙏"; out.className = "tr-msg ok"; setTimeout(close, 900); }
+      }, function () { out.textContent = "Couldn't send — please try again."; out.className = "tr-msg err"; self.disabled = false; });
+    };
+    document.getElementById("fb-msg").focus();
+  }
+
   /* ---------- QUIZ / MCQ mode ---------- */
   function initQuiz() {
     var id = qp("book"), n = qp("ch"), mode = qp("mode");
@@ -793,6 +842,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     registerSW();
     initTheme();
+    initFeedback();
     wireViber();
     // "Get free access" becomes the sign-up entry (falls back to the form link if auth unavailable)
     document.querySelectorAll(".btn-get").forEach(function (a) {
