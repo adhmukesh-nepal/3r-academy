@@ -16,9 +16,22 @@ flashcards with Anki-style spaced repetition (Again/Good/Easy) + ★ bookmarks; 
 YouTube-placeholder videos; installable **PWA** with offline support. Content is **AES-GCM
 encrypted** (key = PBKDF2 of the book access code); the site serves only ciphertext.
 
-**Accounts (Phase A):** optional email **OTP-code** sign-in; **onboarding form** capturing name,
-phone, profession, exam(s), province, book-status, consent, and an optional access code that
-unlocks the matching book; **account-tied unlock** + **cross-device progress sync**.
+**Accounts (Phase A):** optional **email+password** sign-in (primary) with an **email-code**
+fallback / password recovery; new-account **onboarding form** capturing name, phone, profession,
+exam(s), province, book-status, consent, and an optional access code that unlocks the matching
+book; **account-tied unlock** + **cross-device progress sync**. Signed-in users see the sign-up
+card slimmed + moved to the bottom.
+
+**Percentile ranking + full-length tests (built; client live):** timed attempts submit a score;
+**chapters ranked on most-recent** timed score, **full-length tests on the locked first attempt**;
+results screen shows "ahead of X% of N candidates" (min 20); a **"My ranking"** panel on the book
+page with a **readiness nudge** at ≥60% avg. Full-length tests exist as `kind=test` chapters
+(open straight into timed mode); a coming-soon placeholder is seeded for HA-Loksewa.
+⚠️ **Requires running `RANKING-SETUP.md` SQL once** to create `quiz_scores` + functions.
+
+**Design polish (Tier 1 done):** dark mode (auto + top-bar toggle), 3D flashcard flip animation,
+**streak + daily goal** (local, home strip), celebratory results (score count-up, "+X% vs last",
+confetti ≥80%), all-four-rationales in the timed review, mobile ergonomics, app-icon byline.
 
 ### The live stack (facts a future session needs)
 - **Frontend/site:** static PWA in `docs/`, hosted on **GitHub Pages**, deployed by **GitHub
@@ -35,10 +48,21 @@ unlocks the matching book; **account-tied unlock** + **cross-device progress syn
 - **Ops/limits/analytics:** see `OPERATIONS.md`, `ANALYTICS.md`, `SUPABASE-SETUP.md`, `EMAIL-SETUP.md`.
 
 ### Still author-side / optional
+- **Run `RANKING-SETUP.md` SQL once** to activate percentile ranking (only remaining step for it).
 - Submit the Android app to Google Play (`TWA-PLAYSTORE.md`, `PLAY-LISTING.md`); after upload add
   the Play App Signing SHA-256 to `assetlinks.json`.
 - Set real book codes **with a random suffix** before printing (guessable codes weaken encryption).
 - Custom SMTP is configured; export `profiles` to CSV weekly (Free tier = no backups).
+- Re-add the iPhone home-screen icon to pick up the "by Dr. Mukesh Adhikari" byline.
+
+## 🔜 Design polish — Tier 2 & Tier 3 — NEXT PHASE (not built)
+Tier 1 (dark mode, flip animation, streak/goal, celebratory results, mobile ergonomics) is **done**.
+Remaining (full detail in the plan file `~/.claude/plans/i-am-trying-to-expressive-pinwheel.md`):
+- **Tier 2:** signed-in **Home dashboard** (continue studying, cards due, streak/goal, ranking
+  snapshot, exam countdown — reuse `getProg`, SRS due logic, `book_ranking`); progress rings on
+  chapter/book cards; small **SVG icon set**; typography scale pass.
+- **Tier 3:** exam countdown, badges/achievements, anonymous league tiers (keep percentile-only
+  privacy), TikTok-style swipe review mode.
 
 ## 🔜 Phase B — server-gated content (stop code-sharing) — NOT built
 **Why:** today's gate is client-side. A valid code decrypts content in the browser, and a
@@ -73,9 +97,11 @@ reusing Phase B's `content` function to also check subscription state).
 
 - **Effort:** high (payment integration + webhooks + billing UI + subscription checks).
 
-## 🔜 Percentile ranking + full-length tests — APPROVED, NOT built yet
+## ✅ Percentile ranking + full-length tests — BUILT (activate with `RANKING-SETUP.md` SQL)
 Turns the app into a learning ladder: practise chapters and watch your percentile climb, then
-graduate to a one-shot full-length timed exam. Requires accounts (have them); backend feature.
+graduate to a one-shot full-length timed exam. **Client shipped & live**; the only remaining step
+is running the SQL in `RANKING-SETUP.md` once (creates `quiz_scores` + the 3 SECURITY DEFINER
+functions). Design/decisions below are for reference.
 
 **Confirmed decisions**
 - Ranking uses **timed attempts only** (Study mode stays unranked practice).

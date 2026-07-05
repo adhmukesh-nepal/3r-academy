@@ -4,10 +4,13 @@
 > building and *why*; this file is *how* — the conventions any contributor (or Claude) must
 > follow, plus copy-paste recipes for the author to add content without touching code.
 >
-> **Current status & roadmap:** see `SPEC.md → BUILD STATUS & ROADMAP`. As of 2026-07-04 the
-> project runs on **Phase A** (v1 study app + accounts, live at 3r.mukeshadhikari.com).
-> **Phase B** (server-gated content) and **Phase C** (subscriptions) are specced but not built —
-> to start one, tell a session *"read SPEC.md's roadmap, then start Phase B/C"*.
+> **Current status & roadmap:** see `SPEC.md → BUILD STATUS & ROADMAP` and `CHANGELOG.md`.
+> As of **2026-07-05**, live at 3r.mukeshadhikari.com: v1 study app + **Phase A accounts**
+> (email+password) + **percentile ranking & full-length tests** (client shipped) + **Tier-1
+> design polish** (dark mode, flip animation, streak/goal, celebratory results).
+> **Pending — next phase:** run `RANKING-SETUP.md` SQL to activate ranking; **Tier 2/3 design**
+> (signed-in dashboard, icon set, badges); **Phase B** (server-gated content) & **Phase C**
+> (subscriptions) — specced, not built. To resume: *"read SPEC.md's roadmap, then start <X>."*
 > Operational limits & routine tasks: `OPERATIONS.md`.
 
 ---
