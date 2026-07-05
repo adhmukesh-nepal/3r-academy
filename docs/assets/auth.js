@@ -141,7 +141,7 @@
         client.auth.signUp({ email: email, password: pass }).then(function (r) {
           if (r.error) { setMsg(r.error.message, "err"); self.disabled = false; return; }
           if (r.data && r.data.session) { close(); } // signed in immediately (email confirmation off)
-          else { setMsg("Account created — check your email to confirm, then sign in.", "ok"); self.disabled = false; }
+          else { renderOtpCode(email, "signup"); } // confirmation required → collect the emailed code
         });
       };
       document.getElementById("tr-toback").onclick = renderPassword;
@@ -162,16 +162,17 @@
         client.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } }).then(function (r) {
           self.disabled = false;
           if (r.error) { setMsg(r.error.message, "err"); return; }
-          renderOtpCode(email);
+          renderOtpCode(email, "email");
         });
       };
       document.getElementById("tr-toback").onclick = renderPassword;
       document.getElementById("tr-email").focus();
     }
 
-    function renderOtpCode(email) {
+    function renderOtpCode(email, type) {
       title.textContent = "Enter your code";
-      lead.textContent = "We emailed a code to " + email + ".";
+      lead.textContent = "We emailed a code to " + email + ". Enter it below to " +
+        (type === "signup" ? "confirm your account." : "sign in.");
       body.innerHTML =
         '<input id="tr-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter your code">' +
         '<button id="tr-verify" class="tr-primary">Verify &amp; sign in</button>' +
@@ -180,11 +181,11 @@
       document.getElementById("tr-verify").onclick = function () {
         var token = gv("tr-otp").replace(/\s/g, ""); if (!token) return;
         this.disabled = true; setMsg("Verifying…"); var self = this;
-        client.auth.verifyOtp({ email: email, token: token, type: "email" }).then(function (r) {
+        client.auth.verifyOtp({ email: email, token: token, type: type || "email" }).then(function (r) {
           if (r.error) { setMsg(r.error.message, "err"); self.disabled = false; } else close();
         });
       };
-      document.getElementById("tr-toback").onclick = renderOtpEmail;
+      document.getElementById("tr-toback").onclick = renderPassword;
       document.getElementById("tr-otp").focus();
     }
 
