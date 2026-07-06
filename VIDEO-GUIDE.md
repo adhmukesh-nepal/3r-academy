@@ -23,6 +23,15 @@ goes into the chapter's `Videos` sheet (`yt` column).
 - **Audio matters more than video** — use a decent mic in a quiet room; speak clearly.
 - Turn off notifications; close other windows before sharing.
 
+## Slide template (ready to use)
+A branded, editable deck is at **`templates/3R-Academy-Video-Template.pptx`** — open it in
+PowerPoint, Keynote, or Google Slides (File → Import). It has 7 layouts in the 3R palette:
+1. **Title**, 2. **In this lesson** (objectives), 3. **Topic/content**, 4. **KEY facts** (recall),
+5. **Don't confuse** (two-column), 6. **Outro / CTA**, 7. **Thumbnail** (16:9 — edit the text, then
+export that slide as a PNG for the YouTube thumbnail: File → Export / Save as picture).
+Duplicate the content/KEY-facts slides as many times as you need per video. Replace the placeholder
+text; keep the colors, pill, and watermark.
+
 ## Slides / on-screen (brand consistency)
 - Use the **3R palette**: dark teal `#16323d`, accents Read `#1F6F8B` / Recall `#548235` / Rank `#BF8F00`.
 - **Big fonts, minimal text, one idea per slide.** High contrast (works when watched on a phone).
