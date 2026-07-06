@@ -11,7 +11,8 @@ goes into the chapter's `Videos` sheet (`yt` column).
   the app's video grid and how students actually study (bite-sized).
 
 ## Structure (same every time)
-1. **Intro (~10s):** branded title card — "3R Academy · <Book> · Ch<N> — <Topic>", by Dr. Mukesh Adhikari.
+1. **Intro (~10s):** branded title card — "3R Academy — <Topic>", by Dr. Mukesh Adhikari.
+   *(Record by **topic**, not book — one "Epidemiology" video can serve HA, PHO, Staff Nurse, etc.)*
 2. **Objective (~15s):** "By the end you'll know X, Y, Z."
 3. **Teaching:** high-yield only — the exam-relevant points, mnemonics, KEY facts. No filler.
 4. **Recap (~30s):** the 3–5 must-remember one-liners.
@@ -45,7 +46,9 @@ text; keep the colors, pill, and watermark.
 ## YouTube upload
 - **Visibility:** the app's content is free-with-book, so **Public** is fine and doubles as marketing/SEO
   (people find you on YouTube). Use **Unlisted** only if you want a bit of exclusivity — either embeds fine.
-- **Title convention:** `3R Academy | <Book> | Ch<N> Part <k> — <Topic>` (consistent, searchable).
+- **Title convention (topic-based):** `3R Academy | <Topic> — Part <k>` (e.g.
+  `3R Academy | Epidemiology — Levels of Prevention`). Topic-based titles keep videos reusable
+  across books.
 - Consistent **thumbnail** style (3R colors + chapter/topic text). A simple template you reuse.
 - Note: embedded videos need internet (they won't play offline; notes/flashcards/quizzes still do).
 
@@ -55,6 +58,8 @@ text; keep the colors, pill, and watermark.
    (Leave `yt` blank to show a "coming soon" card.)
 3. `./build.sh` → `git push`. The card becomes an embedded player automatically.
 - Keep to **~3–6 videos per chapter** so the grid stays scannable.
+- **Reuse across books:** the same video ID can be dropped into **multiple books' Videos sheets**
+  (e.g. an "Epidemiology" video in HA ch5 *and* PHO's matching chapter) — record once, embed anywhere.
 
 ## Quick checklist per video
 - [ ] One subtopic, 5–10 min · [ ] Branded intro + outro CTA · [ ] 3R-colored, low-text slides +
