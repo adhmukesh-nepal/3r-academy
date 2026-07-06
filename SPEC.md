@@ -165,6 +165,35 @@ as everyone improves — intended). Chapters are overwrite (measures current mas
 first attempt is server-locked so it can't be ground. Only affects the caller's own displayed rank;
 no one can read others' scores.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## How to resume later
 Tell a new session: *"Read SPEC.md → BUILD STATUS & ROADMAP, then start Phase B"* (or C). The
 prerequisites, file touch-points, and schema additions are listed above. For now the project runs
