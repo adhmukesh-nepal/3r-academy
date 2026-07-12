@@ -13,9 +13,11 @@
     "id": "pho-loksewa",
     "name": "Public Health Officer — Loksewa",
     "board": "PSC · Government job",
-    "desc": "Coming soon",
+    "desc": "First Paper — Comprehensive Review (4th ed.)",
     "category": "loksewa",
-    "ready": false
+    "ready": true,
+    "salt": "xXE3tibdlh/SHzuQS/NRYg==",
+    "locked": true
   },
   {
     "id": "ha-licensing",

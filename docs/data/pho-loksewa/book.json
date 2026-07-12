@@ -1,0 +1,14 @@
+{
+  "book": "pho-loksewa",
+  "name": "Public Health Officer Loksewa — First Paper",
+  "edition": "4th Edition",
+  "tagline": "learn it · lock it in · top the merit list",
+  "chapters": [
+    {
+      "n": 1,
+      "title": "Biostatistics",
+      "ready": true,
+      "kind": "chapter"
+    }
+  ]
+}
