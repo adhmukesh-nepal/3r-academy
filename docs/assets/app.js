@@ -658,7 +658,8 @@
         var idx = 0, score = 0, answered = false;
         var answers = pool.map(function () { return -1; });
         var total = pool.length;
-        var secsLeft = total * 60, timer = null;
+        var SECS_PER_Q = 45; // timed test allots 45 seconds per question
+        var secsLeft = total * SECS_PER_Q, timer = null;
 
         root.innerHTML =
           '<div class="quiz-bar"><span id="qProg"></span>' + (behavior === "timed" ? '<span class="timer" id="qTimer"></span>' : '<span></span>') + '</div>' +
