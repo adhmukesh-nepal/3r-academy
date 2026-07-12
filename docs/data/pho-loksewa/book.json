@@ -6,8 +6,56 @@
   "chapters": [
     {
       "n": 1,
-      "title": "Biostatistics",
+      "title": "Scale & data types",
       "ready": true,
+      "kind": "chapter"
+    },
+    {
+      "n": 2,
+      "title": "Data presentation",
+      "ready": true,
+      "kind": "chapter"
+    },
+    {
+      "n": 3,
+      "title": "Measures of central tendency",
+      "ready": true,
+      "kind": "chapter"
+    },
+    {
+      "n": 4,
+      "title": "Measures of dispersion",
+      "ready": true,
+      "kind": "chapter"
+    },
+    {
+      "n": 5,
+      "title": "Probability & distributions",
+      "ready": false,
+      "kind": "chapter"
+    },
+    {
+      "n": 6,
+      "title": "Sampling & estimation",
+      "ready": false,
+      "kind": "chapter"
+    },
+    {
+      "n": 7,
+      "title": "Hypothesis testing",
+      "ready": false,
+      "kind": "chapter"
+    },
+    {
+      "n": 8,
+      "title": "Statistical tests",
+      "ready": false,
+      "kind": "chapter"
+    },
+    {
+      "n": 9,
+      "title": "Correlation & regression",
+      "ready": false,
       "kind": "chapter"
     }
   ]
