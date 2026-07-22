@@ -40,6 +40,12 @@
    360px-wide screen and up to a desktop browser.
 6. **Fail gracefully.** If a book/chapter/deck isn't `ready` or a field is missing, show a
    friendly "coming soon" state — never a blank screen or a JS error.
+7. **This repo is PUBLIC — never commit private or strategic content.** `adhmukesh-nepal/3r-academy`
+   is a public GitHub repo, and **everything at the repo root** (`SPEC.md`, all `*.md` docs) is
+   browsable on GitHub even though only `docs/` is served on the website. **Never commit** competitor
+   analysis, business/pricing strategy, unreleased roadmap reasoning, revenue numbers, access codes,
+   personal data, or any internal discussion. Those belong in **private memory** (`~/.claude/…`) or a
+   **gitignored `notes/` folder** — never in a tracked file. When in doubt, don't commit — ask first.
 
 ---
 

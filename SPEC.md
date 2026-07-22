@@ -3,6 +3,11 @@
 > **Brand:** 3R Academy — Health Loksewa & Licensing Prep, founded by Dr. Mukesh Adhikari.
 > Study method: **Read · Recall · Rank (3R)**.
 
+> ⚠️ **HARD RULE — this repo is PUBLIC.** Never commit or push internal discussion, competitor
+> analysis, business/pricing strategy, revenue numbers, access codes, personal data, or any other
+> private platform information. Everything at the repo root is browsable on GitHub. Keep such notes
+> in private memory (`~/.claude/…`) or a gitignored `notes/` folder. See `CLAUDE.md` §1 rule 7.
+
 ---
 
 # BUILD STATUS & ROADMAP (updated 2026-07-04)
