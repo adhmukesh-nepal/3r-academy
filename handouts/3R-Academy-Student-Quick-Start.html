@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>3R Academy — Student Quick Start</title>
+<style>
+  :root{
+    --read:#1F6F8B; --recall:#548235; --rank:#BF8F00;
+    --ink:#22303a; --muted:#5a6a74; --line:#dfe6ea; --header:#16323d; --bg:#ffffff;
+    --read-s:#eaf3f6; --recall-s:#eef4e8; --rank-s:#faf3de;
+  }
+  *{box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  @page{ size:A4; margin:0; }
+  html,body{margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); font-size:10.3pt; line-height:1.4;}
+  .page{width:210mm; min-height:297mm; padding:0 0 9mm; margin:0 auto;}
+
+  /* header band */
+  header{background:var(--header); color:#eaf2f4; padding:8.5mm 12mm 7mm;}
+  .brandrow{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .brand{font-size:19pt; font-weight:800; letter-spacing:-.2px;}
+  .brand small{display:block; font-size:8pt; font-weight:500; color:#accbd3; letter-spacing:.3px; margin-top:2px;}
+  .pill{font-size:8pt; font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
+    background:rgba(255,255,255,.12); padding:5px 11px; border-radius:999px; white-space:nowrap;}
+  .pill .r{color:#7fc7db} .pill .c{color:#a6d67f} .pill .k{color:#e6c260}
+  h1{font-size:13.5pt; margin:9px 0 2px; font-weight:800;}
+  header .sub{margin:0; color:#bcd0d6; font-size:9.3pt;}
+
+  .body{padding:6mm 12mm 0;}
+  .steps{display:grid; grid-template-columns:1fr 1fr; gap:5mm 7mm;}
+  .step{border:1px solid var(--line); border-radius:9px; padding:8px 11px 9px; break-inside:avoid;}
+  .step h2{display:flex; align-items:center; gap:8px; margin:0 0 5px; font-size:10.6pt; font-weight:800;}
+  .num{flex:none; width:19px; height:19px; border-radius:6px; background:var(--header); color:#fff;
+    font-size:9pt; font-weight:800; display:flex; align-items:center; justify-content:center;}
+  .step ul{margin:0; padding-left:15px;}
+  .step li{margin:2.5px 0;}
+  .step ol.sub{margin:3px 0 3px; padding-left:17px;}
+  .step ol.sub li{margin:1.5px 0;}
+  .step ol.sub li::marker{font-weight:800; color:var(--read);}
+  .step li b{color:var(--ink);}
+  .tag{display:inline-block; font-size:7.6pt; font-weight:800; text-transform:uppercase; letter-spacing:.4px;
+    padding:1px 6px; border-radius:4px; vertical-align:1px;}
+  .codeline{margin-top:6px; padding:6px 8px; border:1px dashed var(--rank); background:var(--rank-s);
+    border-radius:6px; font-size:9pt;}
+  .codeline .fill{display:inline-block; min-width:120px; border-bottom:1.4px solid #9a7a12; margin:0 4px;}
+
+  /* study section (full width) */
+  .study{margin-top:5mm; border:1px solid var(--line); border-radius:9px; overflow:hidden;}
+  .study-h{display:flex; align-items:center; gap:8px; padding:7px 11px; background:#f4f7f8;
+    border-bottom:1px solid var(--line); font-weight:800; font-size:10.6pt;}
+  .rrr{display:grid; grid-template-columns:1fr 1fr 1fr;}
+  .rrr .col{padding:8px 11px 10px;}
+  .rrr .col + .col{border-left:1px solid var(--line);}
+  .rrr h3{margin:0 0 4px; font-size:9.6pt; display:flex; align-items:center; gap:6px;}
+  .dot{width:10px;height:10px;border-radius:50%; display:inline-block;}
+  .rrr p{margin:0; font-size:9pt; color:#354049;}
+  .read h3{color:var(--read)} .recall h3{color:var(--recall)} .rank h3{color:#8a6a00}
+  .read{background:var(--read-s)} .recall{background:var(--recall-s)} .rank{background:var(--rank-s)}
+
+  .tips{margin-top:5mm; display:flex; gap:7mm;}
+  .tips .box{flex:1; border-left:3px solid var(--recall); padding:2px 0 2px 9px; font-size:9pt;}
+  .tips .box.b2{border-left-color:var(--rank);}
+  .tips b{color:var(--ink);}
+
+  footer{margin-top:6mm; padding:5px 12mm 0; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:8.4pt;}
+  footer .site{color:var(--read); font-weight:700;}
+</style></head>
+<body><div class="page">
+  <header>
+    <div class="brandrow">
+      <div class="brand">3R&nbsp;Academy<small>learn it · lock it in · top the merit list</small></div>
+      <span class="pill"><span class="r">Read</span> · <span class="c">Recall</span> · <span class="k">Rank</span></span>
+    </div>
+    <h1>Student Quick-Start Guide</h1>
+    <p class="sub">Public Health Officer · Loksewa — sign up and start practising in about 5 minutes.</p>
+  </header>
+
+  <div class="body">
+    <div class="steps">
+      <div class="step">
+        <h2><span class="num">1</span> Open &amp; install the app</h2>
+        <ul>
+          <li>Open <b>Chrome</b> and go to <b>3r.mukeshadhikari.com</b>.</li>
+          <li><b>Add to home screen on Android (Chrome):</b>
+            <ol class="sub">
+              <li>Tap the <b>⋮ menu</b> (three dots, top-right).</li>
+              <li>Tap <b>“Add to Home screen”</b> — it may say <b>“Install app.”</b></li>
+              <li>Tap <b>Add / Install</b> → the <b>3R Academy</b> icon appears on your home screen.</li>
+            </ol>
+          </li>
+          <li><b>iPhone:</b> open in <b>Safari</b> → <b>Share</b> → <b>“Add to Home Screen.”</b></li>
+          <li>It then opens full-screen like an app and <b>works offline</b>.</li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <h2><span class="num">2</span> Create your account</h2>
+        <ul>
+          <li>Tap <b>Sign in</b> (top-right) → <b>“New here? Create an account.”</b></li>
+          <li>Enter your <b>email + a password</b> (6+ characters) → <b>Create account</b>.</li>
+          <li>Check your email for a <b>code</b> → enter it → <b>Verify &amp; sign in</b>.</li>
+          <li>Fill the short profile: name, profession, exam, province, book. <i>One sign-up unlocks everything, on any device.</i></li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <h2><span class="num">3</span> Unlock your book</h2>
+        <ul>
+          <li>Open <b>Public Health Officer — Loksewa</b>.</li>
+          <li>On <b>“Unlock your resources,”</b> type the access code → <b>Unlock</b>. You only do this once per device.</li>
+        </ul>
+        <div class="codeline">🔑 <b>Your access code:</b> <span class="fill">&nbsp;</span> <span style="color:#7a6410">(from your book / your teacher)</span></div>
+      </div>
+
+      <div class="step">
+        <h2><span class="num">4</span> Track your progress</h2>
+        <ul>
+          <li>Your <b>scores, starred items, and review schedule save on your device</b> (and sync if signed in).</li>
+          <li>Study a little every day to keep your <b>daily streak 🔥</b> going.</li>
+          <li>Suggested order: <b>Scale &amp; data types → Data presentation → Central tendency → Dispersion.</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="study">
+      <div class="study-h">📚 Inside each chapter — three ways to learn</div>
+      <div class="rrr">
+        <div class="col read">
+          <h3><span class="dot" style="background:var(--read)"></span> Read — Key points</h3>
+          <p>The “most important things to remember.” Skim these first to get the big picture.</p>
+        </div>
+        <div class="col recall">
+          <h3><span class="dot" style="background:var(--recall)"></span> Recall — Flashcards</h3>
+          <p>Tap a card to flip it, then rate how well you knew it — hard cards come back sooner. Tap <b>★ Star</b> to save tricky ones.</p>
+        </div>
+        <div class="col rank">
+          <h3><span class="dot" style="background:var(--rank)"></span> Rank — MCQs</h3>
+          <p><b>Study mode:</b> see the answer &amp; why each option is right/wrong. <b>Timed test:</b> 45 sec per question, score at the end.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tips">
+      <div class="box"><b>Best way to study:</b> do a <b>Study-mode</b> run first to learn, then a <b>Timed test</b> to check yourself under exam pressure. Afterwards, use <b>Review weak areas</b> and <b>Starred</b> to focus on what you missed.</div>
+      <div class="box b2"><b>No internet?</b> Once a chapter has opened, it keeps working <b>offline</b>. Forgot your password? Use <b>“Email me a code”</b> on the sign-in screen.</div>
+    </div>
+
+    <footer>
+      <span>Founded by <b>Dr. Mukesh Adhikari</b>, PhD, MPH, MPA</span>
+      <span class="site">3r.mukeshadhikari.com</span>
+    </footer>
+  </div>
+</div></body></html>
