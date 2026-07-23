@@ -352,7 +352,9 @@
       var vg = document.getElementById("videoGrid");
       if (vg) {
         vg.innerHTML = "";
-        (unit.videos || []).forEach(function (v) {
+        var vids = unit.videos || [];
+        if (!vids.length) { vg.appendChild(el("div", "msg", "🎬 Video lessons are coming soon.")); }
+        vids.forEach(function (v) {
           var card = el("div", "card");
           if (v.yt) {
             var f = el("div", "vid");
