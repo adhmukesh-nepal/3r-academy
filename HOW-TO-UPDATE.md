@@ -93,7 +93,12 @@ git add -A && git commit -m "update content" && git push
 - **Backup:** `content/*.xlsx` lives only on this Mac (not on GitHub — it holds the codes).
   Keep a copy on OneDrive; if you edit on another computer, bring the file back into `content/`.
   Put any backup/old copies in **`content/backups/`**, never loose in `content/` — the build scans
-  every `content/*.xlsx` and a stray copy would create a duplicate book.
+  every `content/*.xlsx` and a stray copy would create a duplicate book. (The build also skips any
+  file whose name contains `-REVIEW` or `-BACKUP`.)
+- **Auto-backups:** every `./build.sh` saves a timestamped, **code-included** copy of each workbook to
+  **`content/backups/auto/`** (`<book>-YYYYMMDD-HHMM.xlsx`, keeping the 8 most recent per book). These
+  are gitignored and never published. **To recover a lost master:** copy the newest
+  `content/backups/auto/pho-loksewa-*.xlsx` back to `content/pho-loksewa.xlsx`, then run `./build.sh`.
 - **New book/course:** copy a workbook to `content/<new-id>.xlsx`, fill the **Book** sheet, add
   content, then build + push (recipe in `CLAUDE.md §4`).
 - **Deploy stuck/failed:** GitHub Pages is occasionally flaky — GitHub → **Actions** tab →

@@ -33,27 +33,47 @@
         {
           "id": "probability-distributions",
           "title": "Probability & distributions",
-          "ready": false
+          "ready": true
         },
         {
           "id": "sampling-estimation",
           "title": "Sampling & estimation",
-          "ready": false
+          "ready": true
         },
         {
           "id": "hypothesis-testing",
           "title": "Hypothesis testing",
-          "ready": false
+          "ready": true
         },
         {
           "id": "statistical-tests",
           "title": "Statistical tests",
-          "ready": false
+          "ready": true
         },
         {
-          "id": "correlation-regression",
-          "title": "Correlation & regression",
-          "ready": false
+          "id": "correlation",
+          "title": "Correlation",
+          "ready": true
+        },
+        {
+          "id": "regression",
+          "title": "Regression",
+          "ready": true
+        },
+        {
+          "id": "practice-easy",
+          "title": "Full-length practice — Set 1 (Easy)",
+          "ready": true
+        },
+        {
+          "id": "practice-medium",
+          "title": "Full-length practice — Set 2 (Medium)",
+          "ready": true
+        },
+        {
+          "id": "practice-hard",
+          "title": "Full-length practice — Set 3 (Hard)",
+          "ready": true
         }
       ]
     }

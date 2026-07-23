@@ -298,6 +298,11 @@ def main():
     for xlsx in sorted(CONTENT.glob("*.xlsx")):
         if xlsx.name.startswith("~$"):   # skip Excel lock files
             continue
+        # skip non-source copies (reviewer exports / backups) so they don't create
+        # duplicate or code-less "books". Keep such copies in content/backups/ too.
+        up = xlsx.stem.upper()
+        if "-REVIEW" in up or "-BACKUP" in up or ".BACKUP" in xlsx.name.upper():
+            continue
         parsed = build_book(xlsx)
         if parsed:
             books.append(parsed)

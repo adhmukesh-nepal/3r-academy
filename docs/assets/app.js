@@ -330,9 +330,12 @@
       }
       var subParam = subId ? "&sub=" + encodeURIComponent(subId) : "";
 
+      // a unit with MCQs but no notes/decks/videos is a "practice test" → show only the MCQ section
+      var testUnit = (unit.mcqs || []).length > 0 && !(unit.decks || []).length && !(unit.notes || []).length && !(unit.videos || []).length;
       var subSec = document.getElementById("subtopics"); if (subSec) subSec.style.display = "none";
+      var visibleSecs = testUnit ? ["practice"] : ["watch", "flashcards", "practice", "rapid"];
       ["watch", "flashcards", "practice", "rapid"].forEach(function (sid) {
-        var s = document.getElementById(sid); if (s) s.style.display = "";
+        var s = document.getElementById(sid); if (s) s.style.display = visibleSecs.indexOf(sid) >= 0 ? "" : "none";
       });
 
       var back = document.getElementById("backToBook");
@@ -410,7 +413,7 @@
           var best = prog.quiz && typeof prog.quiz.best === "number" ? '<div class="cnt">Best score: <b>' + prog.quiz.best + " / " + (prog.quiz.total || count) + '</b> · ' + prog.quiz.attempts + ' attempt' + (prog.quiz.attempts === 1 ? "" : "s") + '</div>' : "";
           qe.innerHTML =
             '<div class="card deck"><h4>' + count + ' question' + (count === 1 ? "" : "s") + '</h4>' +
-            '<div class="cnt">See the answer + why each option is right or wrong.</div>' + best +
+            '<div class="cnt">' + (testUnit ? "Full-length timed practice — " + count + " questions. Use Timed test for exam-like practice." : "See the answer + why each option is right or wrong.") + '</div>' + best +
             '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">' +
               '<a class="btn" style="background:var(--recall)" href="' + base + '&mode=study">Study mode →</a>' +
               '<a class="btn" style="background:var(--rank)" href="' + base + '&mode=timed">Timed test →</a>' + extra +
@@ -788,8 +791,15 @@
       var ukeys = unitKeys(unit), mcqKeys = ukeys.mcqKeys;   // content-identity key per MCQ
       if (pruneProgress(p, ukeys)) setUnitProg(id, n, subId, p);  // one-time reset of stale keys
 
+      // Present options in random order each attempt (correctness travels with each option's
+      // `correct` flag, so this removes any answer-position bias without touching content).
+      function shuffledQ(m) {
+        var o = m.options.slice();
+        for (var i = o.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = o[i]; o[i] = o[j]; o[j] = t; }
+        return { q: m.q, options: o };
+      }
       function computePool() {
-        var all = mcqs.map(function (q, i) { return { q: q, oi: i, key: mcqKeys[i] }; });
+        var all = mcqs.map(function (m, i) { return { q: shuffledQ(m), oi: i, key: mcqKeys[i] }; });
         if (mode === "weak") return all.filter(function (it) { return p.weakMcqs.indexOf(it.key) !== -1; });
         if (mode === "starred") return all.filter(function (it) { return p.starMcqs.indexOf(it.key) !== -1; });
         return all;

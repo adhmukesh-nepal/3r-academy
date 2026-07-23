@@ -28,3 +28,7 @@ venv/
 *.jks
 *.aab
 *.apk
+
+# REFERENCE / SOURCE MATERIAL — kept OFF the public repo (curriculum + copyrighted
+# textbook PDFs used only for authoring). Back up privately (OneDrive), never commit.
+resources/
