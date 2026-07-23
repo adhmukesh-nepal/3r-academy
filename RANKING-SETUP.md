@@ -30,7 +30,7 @@ create policy "own scores read" on public.quiz_scores
 
 -- 2. Record a timed attempt: chapters/subtopics overwrite (recent); tests lock the first attempt.
 create or replace function public.submit_score(p_book text, p_chapter int, p_subtopic text, p_kind text, p_score int, p_total int)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public as $submit$
 declare uid uuid := auth.uid(); p numeric; sub text := coalesce(p_subtopic, '');
 begin
   if uid is null or p_total is null or p_total <= 0 then return; end if;
@@ -45,11 +45,11 @@ begin
     on conflict (user_id, book_id, chapter, subtopic)
     do update set score = excluded.score, total = excluded.total, pct = excluded.pct, taken_at = now();
   end if;
-end; $$;
+end; $submit$;
 
 -- 3. One subtopic/chapter/test percentile for the caller (min 20 candidates).
 create or replace function public.chapter_percentile(p_book text, p_chapter int, p_subtopic text default '')
-returns json language plpgsql security definer set search_path = public as $$
+returns json language plpgsql security definer set search_path = public as $pct$
 declare uid uuid := auth.uid(); n int; mine numeric; below int; sub text := coalesce(p_subtopic, '');
 begin
   if uid is null then return json_build_object('signedIn', false); end if;
@@ -62,11 +62,11 @@ begin
   select count(*) into below from public.quiz_scores where book_id=p_book and chapter=p_chapter and subtopic=sub and pct < mine;
   return json_build_object('signedIn', true, 'attempted', true, 'enough', true, 'count', n, 'your_pct', mine,
     'percentile', round(below::numeric / nullif(n-1,0) * 100));   -- % of candidates you're ahead of
-end; $$;
+end; $pct$;
 
 -- 4. Whole-book ranking for the caller: per subtopic/chapter, readiness average, and an OVERALL rank.
 create or replace function public.book_ranking(p_book text)
-returns json language plpgsql security definer set search_path = public as $$
+returns json language plpgsql security definer set search_path = public as $rank$
 declare uid uuid := auth.uid(); res json; avgp numeric;
         my_mean numeric; un int; ubelow int; overall json;
 begin
@@ -108,7 +108,7 @@ begin
     ) end;
 
   return json_build_object('signedIn', true, 'chapters', res, 'avg_percentile', avgp, 'overall', overall);
-end; $$;
+end; $rank$;
 
 -- 5. Allow signed-in users to call the functions
 grant execute on function public.submit_score(text,int,text,text,int,int) to authenticated;
