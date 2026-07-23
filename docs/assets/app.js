@@ -174,12 +174,17 @@
         var card = el("div", "chap" + (c.ready ? "" : " soon"));
         var badge = "";
         if (c.ready) {
-          var pr = getProg(id, c.n);
-          if (pr.quiz && typeof pr.quiz.best === "number") {
-            var done = pr.quiz.best === pr.quiz.total;
-            badge = '<span class="pbadge ' + (done ? "done" : "part") + '">Quiz best ' + pr.quiz.best + "/" + pr.quiz.total + "</span>";
-          } else if (Object.keys(pr.cards).length) {
-            badge = '<span class="pbadge part">' + Object.keys(pr.cards).length + " cards reviewed</span>";
+          if (c.subtopics && c.subtopics.length) {
+            var readyN = c.subtopics.filter(function (s) { return s.ready; }).length;
+            badge = '<span class="pbadge part">' + readyN + " / " + c.subtopics.length + " subtopics</span>";
+          } else {
+            var pr = getProg(id, c.n);
+            if (pr.quiz && typeof pr.quiz.best === "number") {
+              var done = pr.quiz.best === pr.quiz.total;
+              badge = '<span class="pbadge ' + (done ? "done" : "part") + '">Quiz best ' + pr.quiz.best + "/" + pr.quiz.total + "</span>";
+            } else if (Object.keys(pr.cards).length) {
+              badge = '<span class="pbadge part">' + Object.keys(pr.cards).length + " cards reviewed</span>";
+            }
           }
         }
         card.innerHTML =
@@ -221,14 +226,30 @@
     var section = document.getElementById("ranking"), body = document.getElementById("rankingBody");
     if (!section || !body) return;
     if (!(window.TR && window.TR.session && window.TR.client)) { section.style.display = "none"; return; }
-    var titles = {}; (book.chapters || []).forEach(function (c) { titles[c.n] = c; });
+    var titles = {}, subTitles = {};
+    (book.chapters || []).forEach(function (c) {
+      titles[c.n] = c;
+      (c.subtopics || []).forEach(function (s) { subTitles[c.n + "|" + s.id] = s.title; });
+    });
     window.TR.client.rpc("book_ranking", { p_book: id }).then(function (res) {
       var d = res && res.data;
       if (!d || !d.signedIn || !d.chapters || !d.chapters.length) { section.style.display = "none"; return; }
       var html = "";
+      // overall rank first (mean timed-test performance vs the whole cohort)
+      var o = d.overall;
+      if (o && o.attempted) {
+        var oval = o.enough ? ("Top " + Math.max(1, 100 - o.percentile) + "% of " + o.count)
+                            : ("Avg " + o.your_pct + "% · rank at 20+");
+        html += '<div class="rank-row"><div class="rank-label"><b>Overall</b></div>' +
+                '<div class="rank-bar"><span style="width:' + (o.enough ? o.percentile : 0) + '%"></span></div>' +
+                '<div class="rank-val"><b>' + esc(oval) + '</b></div></div>';
+      }
       d.chapters.forEach(function (r) {
         var c = titles[r.chapter] || {};
-        var label = c.kind === "test" ? (c.title || "Full-length test") : ("Ch " + r.chapter + (c.title ? " · " + c.title : ""));
+        var label;
+        if (r.subtopic) label = (c.title ? c.title + " · " : "") + (subTitles[r.chapter + "|" + r.subtopic] || r.subtopic);
+        else if (c.kind === "test") label = c.title || "Full-length test";
+        else label = "Ch " + r.chapter + (c.title ? " · " + c.title : "");
         var val, w;
         if (r.enough) { val = "Top " + Math.max(1, 100 - r.percentile) + "% of " + r.count; w = r.percentile; }
         else { val = "You: " + r.your_pct + "% · rank at 20+"; w = 0; }
@@ -245,9 +266,50 @@
     }).catch(function () { section.style.display = "none"; });
   }
 
+  /* ---------- CHAPTER: subtopic chooser (when a chapter has subtopics) ---------- */
+  function renderSubtopicList(id, n, ch, book) {
+    ["watch", "flashcards", "practice", "rapid"].forEach(function (sid) {
+      var s = document.getElementById(sid); if (s) s.style.display = "none";
+    });
+    var sec = document.getElementById("subtopics"); if (sec) sec.style.display = "";
+    var back = document.getElementById("backToBook");
+    if (back) { back.href = "/book.html?book=" + encodeURIComponent(id); back.textContent = "← Chapters"; }
+    setText("brandName", book.name);
+    setText("chLabel", "Chapter " + ch.number);
+    setText("chTitle", ch.title);
+    setText("chEdition", book.edition);
+    if (book.tagline) setText("tagline", book.tagline);
+    setText("chFoot", "Chapter " + ch.number);
+    document.title = ch.title + " · 3R Academy";
+    var grid = document.getElementById("subtopicGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    (ch.subtopics || []).forEach(function (s) {
+      var card = el("div", "chap" + (s.ready ? "" : " soon"));
+      var badge = "";
+      if (s.ready) {
+        var pr = getUnitProg(id, n, s.id);
+        if (pr.quiz && typeof pr.quiz.best === "number") {
+          var done = pr.quiz.best === pr.quiz.total;
+          badge = '<span class="pbadge ' + (done ? "done" : "part") + '">Quiz best ' + pr.quiz.best + "/" + pr.quiz.total + "</span>";
+        } else if (Object.keys(pr.cards).length) {
+          badge = '<span class="pbadge part">' + Object.keys(pr.cards).length + " cards reviewed</span>";
+        }
+      }
+      card.innerHTML =
+        '<div><div class="cn">Subtopic</div><h4>' + esc(s.title) + badge + "</h4></div>" +
+        '<div class="row">' +
+        (s.ready
+          ? '<span></span><a class="open" href="/chapter.html?book=' + encodeURIComponent(id) + "&ch=" + n + "&sub=" + encodeURIComponent(s.id) + '">Open →</a>'
+          : '<span class="badge">Coming soon</span>') +
+        "</div>";
+      grid.appendChild(card);
+    });
+  }
+
   /* ---------- CHAPTER: revision station ---------- */
   function renderChapter() {
-    var id = qp("book"), n = qp("ch");
+    var id = qp("book"), n = qp("ch"), sub = qp("sub");
     var main = document.querySelector(".wrap.main");
     if (!id || !n) { if (main) showError(main, "No chapter specified."); return; }
     Promise.all([
@@ -255,21 +317,42 @@
       loadEncrypted(id, "/data/" + id + "/ch" + n + ".enc")
     ]).then(function (res) {
       var book = res[0], ch = res[1];
+      var subs = ch.subtopics || null;
+
+      // A subtopic-chapter with no ?sub selected → show the subtopic chooser.
+      if (subs && subs.length && !sub) { renderSubtopicList(id, n, ch, book); return; }
+
+      // Resolve the study unit: a chosen subtopic, or the chapter itself (no subtopics).
+      var unit = ch, subId = null;
+      if (subs && subs.length) {
+        for (var i = 0; i < subs.length; i++) { if (subs[i].id === sub) { unit = subs[i]; subId = sub; break; } }
+        if (subId === null) { if (main) showError(main, "That subtopic doesn't exist."); return; }
+      }
+      var subParam = subId ? "&sub=" + encodeURIComponent(subId) : "";
+
+      var subSec = document.getElementById("subtopics"); if (subSec) subSec.style.display = "none";
+      ["watch", "flashcards", "practice", "rapid"].forEach(function (sid) {
+        var s = document.getElementById(sid); if (s) s.style.display = "";
+      });
+
       var back = document.getElementById("backToBook");
-      if (back) back.href = "/book.html?book=" + encodeURIComponent(id);
+      if (back) {
+        if (subId) { back.href = "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n; back.textContent = "← Subtopics"; }
+        else { back.href = "/book.html?book=" + encodeURIComponent(id); }
+      }
       setText("brandName", book.name);
-      setText("chLabel", "Chapter " + ch.number + " · Revision Station");
-      setText("chTitle", ch.title);
+      setText("chLabel", (subId ? ch.title : "Chapter " + ch.number) + " · Revision Station");
+      setText("chTitle", unit.title || ch.title);
       setText("chEdition", book.edition);
       if (book.tagline) setText("tagline", book.tagline);
       setText("chFoot", "Chapter " + ch.number);
-      document.title = "Revision Station — Chapter " + ch.number + " · " + ch.title;
+      document.title = "Revision Station — " + (unit.title || ch.title);
 
       // videos
       var vg = document.getElementById("videoGrid");
       if (vg) {
         vg.innerHTML = "";
-        (ch.videos || []).forEach(function (v) {
+        (unit.videos || []).forEach(function (v) {
           var card = el("div", "card");
           if (v.yt) {
             var f = el("div", "vid");
@@ -291,20 +374,21 @@
       var dg = document.getElementById("deckGrid");
       if (dg) {
         dg.innerHTML = "";
-        (ch.decks || []).forEach(function (d) {
+        (unit.decks || []).forEach(function (d) {
           var card = el("div", "card deck");
           card.appendChild(el("h4", null, esc(d.name)));
           card.appendChild(el("div", "cnt", (d.desc ? esc(d.desc) + " · " : "") + d.cards.length + " cards"));
           var a = el("a", "btn", "Open deck →");
-          a.href = "/flashcards.html?book=" + encodeURIComponent(id) + "&ch=" + n + "&deck=" + encodeURIComponent(d.id);
+          a.href = "/flashcards.html?book=" + encodeURIComponent(id) + "&ch=" + n + subParam + "&deck=" + encodeURIComponent(d.id);
           card.appendChild(a);
           dg.appendChild(card);
         });
       }
 
       // progress + spaced-repetition coverage under flashcards
-      var prog = getProg(id, n);
-      var cov = coverage(prog, ch);
+      var prog = getUnitProg(id, n, subId);
+      if (pruneProgress(prog, unitKeys(unit))) setUnitProg(id, n, subId, prog);
+      var cov = coverage(prog, unit);
       var dp = document.getElementById("deckProg");
       if (dp && cov.totalCards) {
         dp.innerHTML = 'Reviewed <b>' + cov.seen + ' / ' + cov.totalCards + '</b> cards (' + cov.pct + '%)' +
@@ -315,9 +399,9 @@
       // practice MCQs entry
       var qe = document.getElementById("quizEntry");
       if (qe) {
-        var count = (ch.mcqs || []).length;
+        var count = (unit.mcqs || []).length;
         if (count) {
-          var base = "/quiz.html?book=" + encodeURIComponent(id) + "&ch=" + n;
+          var base = "/quiz.html?book=" + encodeURIComponent(id) + "&ch=" + n + subParam;
           var extra = "";
           if (prog.weakMcqs.length) extra += '<a class="btn" style="background:#c0392b" href="' + base + '&mode=weak">Review weak areas (' + prog.weakMcqs.length + ') →</a>';
           if (prog.starMcqs.length) extra += '<a class="btn" style="background:var(--rank)" href="' + base + '&mode=starred">Starred (' + prog.starMcqs.length + ') →</a>';
@@ -338,27 +422,34 @@
       var rl = document.getElementById("rapidList");
       if (rl) {
         rl.innerHTML = "";
-        (ch.notes || []).forEach(function (t) { rl.appendChild(el("li", null, esc(t))); });
+        (unit.notes || []).forEach(function (t) { rl.appendChild(el("li", null, esc(t))); });
       }
     }).catch(function () { if (main) showError(main, "Couldn't load this chapter. Check the link and try again."); });
   }
 
   /* ---------- FLASHCARDS (with spaced repetition + stars) ---------- */
   function initFlashcards() {
-    var id = qp("book"), n = qp("ch");
+    var id = qp("book"), n = qp("ch"), sub = qp("sub");
     var faceEl = document.getElementById("face");
     if (!id || !n) { if (faceEl) faceEl.textContent = "No chapter specified."; return; }
 
     loadEncrypted(id, "/data/" + id + "/ch" + n + ".enc").then(function (ch) {
-      var realDecks = ch.decks || [];
-      if (!realDecks.length) { faceEl.textContent = "No decks in this chapter yet."; return; }
-      setText("fcTitle", "Flashcards — Chapter " + ch.number);
+      var subs = ch.subtopics || null, unit = ch, subId = null;
+      if (subs && subs.length) {
+        for (var si = 0; si < subs.length; si++) { if (subs[si].id === sub) { unit = subs[si]; subId = sub; break; } }
+        if (subId === null) { if (faceEl) faceEl.textContent = "That subtopic doesn't exist."; return; }
+      }
+      var subParam = subId ? "&sub=" + encodeURIComponent(subId) : "";
+      var realDecks = unit.decks || [];
+      if (!realDecks.length) { faceEl.textContent = "No decks here yet."; return; }
+      setText("fcTitle", "Flashcards — " + (unit.title || "Chapter " + ch.number));
       var back = document.getElementById("fcBack");
-      if (back) back.href = "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n;
+      if (back) back.href = "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n + subParam;
 
-      var p = getProg(id, n);
-      var lookup = {}; // "<deckId>:<i>" -> {front, back}
-      realDecks.forEach(function (d) { d.cards.forEach(function (c, i) { lookup[d.id + ":" + i] = { front: c[0], back: c[1] }; }); });
+      var p = getUnitProg(id, n, subId);
+      var ukeys = unitKeys(unit);          // content-identity keys for this unit
+      var lookup = ukeys.cardOf;           // "c<hash>" -> {front, back}
+      if (pruneProgress(p, ukeys)) setUnitProg(id, n, subId, p);  // one-time reset of stale keys
 
       var cardEl = document.getElementById("flipcard"), hintEl = document.getElementById("hint"),
           countEl = document.getElementById("count"), tabs = document.getElementById("decks"),
@@ -372,7 +463,7 @@
         var starred = p.starCards.filter(function (k) { return lookup[k]; });
         if (starred.length) list.push({ id: "__starred", name: "★ Starred (" + starred.length + ")", keys: starred });
         realDecks.forEach(function (d) {
-          list.push({ id: d.id, name: d.name + " (" + d.cards.length + ")", keys: d.cards.map(function (_, i) { return d.id + ":" + i; }) });
+          list.push({ id: d.id, name: d.name + " (" + d.cards.length + ")", keys: (ukeys.deckKeys[d.id] || []).slice() });
         });
         return list;
       }
@@ -392,7 +483,7 @@
         var accentId = currentDeckId.indexOf("__") === 0 ? "psc" : currentDeckId;
         cardEl.style.borderTopColor = DECK_ACCENT[accentId] || "var(--read)";
         buildTabs(); render();
-        history.replaceState(null, "", "?book=" + encodeURIComponent(id) + "&ch=" + n +
+        history.replaceState(null, "", "?book=" + encodeURIComponent(id) + "&ch=" + n + subParam +
           (currentDeckId.indexOf("__") === 0 ? "" : "&deck=" + encodeURIComponent(currentDeckId)));
       }
       function curKey() { return keys[pos]; }
@@ -421,10 +512,10 @@
       function rate(r) {
         if (!keys.length) return;
         recordActivity("card");
-        rateCard(p, curKey(), r); setProg(id, n, p);
+        rateCard(p, curKey(), r); setUnitProg(id, n, subId, p);
         pos = (pos + 1) % keys.length; flipped = false; buildTabs(); render();
       }
-      function toggleStar() { if (!keys.length) return; toggleIn(p.starCards, curKey()); setProg(id, n, p); buildTabs(); render(); }
+      function toggleStar() { if (!keys.length) return; toggleIn(p.starCards, curKey()); setUnitProg(id, n, subId, p); buildTabs(); render(); }
 
       cardEl.onclick = flip;
       document.getElementById("btnPrev").onclick = prev;
@@ -464,6 +555,28 @@
     localStorage.setItem(progKey(book, ch), JSON.stringify(obj));
     if (window.TR && window.TR.pushProgress) window.TR.pushProgress(book, ch, obj); // sync when signed in
   }
+  // Per-subtopic progress nests inside the chapter blob under p.subs[<sub>], so the
+  // storage key stays "progress:book:ch" (3 segments) and account sync is unchanged.
+  // With no sub (a chapter that has no subtopics) it falls back to the top-level fields.
+  function getUnitProg(book, ch, sub) {
+    if (!sub) return getProg(book, ch);
+    var p = getProg(book, ch);
+    p.subs = p.subs || {};
+    var u = p.subs[sub] || {};
+    u.quiz = u.quiz || null;
+    u.cards = u.cards || {};
+    u.starCards = u.starCards || [];
+    u.starMcqs = u.starMcqs || [];
+    u.weakMcqs = u.weakMcqs || [];
+    return u;
+  }
+  function setUnitProg(book, ch, sub, unit) {
+    if (!sub) { setProg(book, ch, unit); return; }
+    var p = getProg(book, ch);
+    p.subs = p.subs || {};
+    p.subs[sub] = unit;
+    setProg(book, ch, p);
+  }
   function today() { return Math.floor(Date.now() / 86400000); }
 
   // simplified SM-2: rating is "again" | "good" | "easy"
@@ -478,6 +591,51 @@
   }
   function isDue(c) { return c && (c.ivl === 0 || c.due <= today()); }
   function toggleIn(arr, val) { var i = arr.indexOf(val); if (i === -1) arr.push(val); else arr.splice(i, 1); return i === -1; }
+
+  /* ---------- content-identity progress keys ----------
+     Progress attaches to a card/MCQ by a stable hash of its IDENTITY TEXT (a card's
+     FRONT, an MCQ's QUESTION stem) — NOT its position. So the author can add, insert,
+     reorder or delete rows without shifting anyone's SRS/stars/weak-areas, and editing
+     an answer/options/explanation keeps progress; only rewriting the prompt itself
+     resets that one item. See HOW-TO-UPDATE.md. */
+  function hashStr(s) {
+    var h = 5381, t = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+  }
+  // Compute stable keys for every card/MCQ in a study unit (chapter or subtopic),
+  // disambiguating the rare case of two identical prompts. Returns lookups used by the UI.
+  function unitKeys(unit) {
+    var cardOf = {}, deckKeys = {}, seen = {};
+    (unit.decks || []).forEach(function (d) {
+      deckKeys[d.id] = [];
+      (d.cards || []).forEach(function (c) {
+        var k = "c" + hashStr(c[0]);
+        if (seen[k]) { seen[k]++; k += "~" + seen[k]; } else seen[k] = 1;
+        deckKeys[d.id].push(k); cardOf[k] = { front: c[0], back: c[1] };
+      });
+    });
+    var mcqKeys = [], seenq = {};
+    (unit.mcqs || []).forEach(function (m) {
+      var k = "q" + hashStr(m.q);
+      if (seenq[k]) { seenq[k]++; k += "~" + seenq[k]; } else seenq[k] = 1;
+      mcqKeys.push(k);
+    });
+    return { cardOf: cardOf, deckKeys: deckKeys, mcqKeys: mcqKeys };
+  }
+  // Drop progress entries that no longer match any current content key (this is what
+  // performs the one-time reset of the older position-based keys). Returns true if it
+  // changed anything, so the caller can persist only when needed.
+  function pruneProgress(prog, keys) {
+    var changed = false, mset = {};
+    keys.mcqKeys.forEach(function (k) { mset[k] = 1; });
+    Object.keys(prog.cards).forEach(function (k) { if (!keys.cardOf[k]) { delete prog.cards[k]; changed = true; } });
+    function keep(arr, ok) { var n = arr.filter(ok); if (n.length !== arr.length) changed = true; return n; }
+    prog.starCards = keep(prog.starCards, function (k) { return keys.cardOf[k]; });
+    prog.starMcqs = keep(prog.starMcqs, function (k) { return mset[k]; });
+    prog.weakMcqs = keep(prog.weakMcqs, function (k) { return mset[k]; });
+    return changed;
+  }
 
   // coverage summary for a chapter given its content
   function coverage(p, ch) {
@@ -604,7 +762,7 @@
 
   /* ---------- QUIZ / MCQ mode ---------- */
   function initQuiz() {
-    var id = qp("book"), n = qp("ch"), mode = qp("mode");
+    var id = qp("book"), n = qp("ch"), mode = qp("mode"), sub = qp("sub");
     var root = document.getElementById("quizRoot");
     if (!id || !n) { showError(root, "No chapter specified."); return; }
     var LETTERS = ["A", "B", "C", "D", "E"];
@@ -612,17 +770,26 @@
     var review = (mode === "weak" || mode === "starred") ? mode : null;
 
     loadEncrypted(id, "/data/" + id + "/ch" + n + ".enc").then(function (ch) {
-      var mcqs = ch.mcqs || [];
-      setText("quizTitle", "Practice MCQs — Chapter " + ch.number);
+      var subs = ch.subtopics || null, unit = ch, subId = null;
+      if (subs && subs.length) {
+        for (var si = 0; si < subs.length; si++) { if (subs[si].id === sub) { unit = subs[si]; subId = sub; break; } }
+        if (subId === null) { showError(root, "That subtopic doesn't exist."); return; }
+      }
+      var subParam = subId ? "&sub=" + encodeURIComponent(subId) : "";
+      var mcqs = unit.mcqs || [];
+      setText("quizTitle", "Practice MCQs — " + (unit.title || "Chapter " + ch.number));
       var back = document.getElementById("backToChapter");
-      if (back) back.href = "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n;
-      document.title = "Practice MCQs — Chapter " + ch.number + " · " + ch.title;
-      var p = getProg(id, n);
+      if (back) back.href = "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n + subParam;
+      document.title = "Practice MCQs — " + (unit.title || ch.title);
+      var p = getUnitProg(id, n, subId);
+      var ukeys = unitKeys(unit), mcqKeys = ukeys.mcqKeys;   // content-identity key per MCQ
+      if (pruneProgress(p, ukeys)) setUnitProg(id, n, subId, p);  // one-time reset of stale keys
 
       function computePool() {
-        if (mode === "weak") return p.weakMcqs.filter(function (i) { return mcqs[i]; }).map(function (i) { return { q: mcqs[i], oi: i }; });
-        if (mode === "starred") return p.starMcqs.filter(function (i) { return mcqs[i]; }).map(function (i) { return { q: mcqs[i], oi: i }; });
-        return mcqs.map(function (q, i) { return { q: q, oi: i }; });
+        var all = mcqs.map(function (q, i) { return { q: q, oi: i, key: mcqKeys[i] }; });
+        if (mode === "weak") return all.filter(function (it) { return p.weakMcqs.indexOf(it.key) !== -1; });
+        if (mode === "starred") return all.filter(function (it) { return p.starMcqs.indexOf(it.key) !== -1; });
+        return all;
       }
 
       if (!mcqs.length) { root.innerHTML = ""; root.appendChild(el("div", "msg", "MCQs for this chapter are coming soon.")); return; }
@@ -648,7 +815,7 @@
         root.querySelectorAll("button[data-mode]").forEach(function (b) {
           b.onclick = function () {
             mode = b.getAttribute("data-mode"); behavior = mode === "timed" ? "timed" : "study";
-            history.replaceState(null, "", "?book=" + encodeURIComponent(id) + "&ch=" + n + "&mode=" + mode);
+            history.replaceState(null, "", "?book=" + encodeURIComponent(id) + "&ch=" + n + subParam + "&mode=" + mode);
             runQuiz(computePool());
           };
         });
@@ -679,11 +846,11 @@
 
         function render() {
           answered = false;
-          var q = pool[idx].q, oi = pool[idx].oi;
+          var q = pool[idx].q, key = pool[idx].key;
           setText("qProg", "Question " + (idx + 1) + " of " + total + (review ? " · " + (review === "weak" ? "weak areas" : "starred") : ""));
           var fill = document.getElementById("qFill"); if (fill) fill.style.width = Math.round(idx / total * 100) + "%";
 
-          var starred = p.starMcqs.indexOf(oi) !== -1;
+          var starred = p.starMcqs.indexOf(key) !== -1;
           var html = '<div class="qcard"><div class="qhead"><p class="qtext">' + esc(q.q) + '</p>' +
                      '<button class="qstar' + (starred ? " on" : "") + '" id="qStar" title="Star this question">' + (starred ? "★" : "☆") + '</button></div><div class="opts">';
           q.options.forEach(function (o, i) {
@@ -699,7 +866,7 @@
             btn.onclick = function () { choose(parseInt(btn.getAttribute("data-i"), 10)); };
           });
           document.getElementById("qStar").onclick = function () {
-            toggleIn(p.starMcqs, oi); setProg(id, n, p); render();
+            toggleIn(p.starMcqs, key); setUnitProg(id, n, subId, p); render();
           };
           var nextBtn = document.getElementById("qNext");
           if (behavior === "timed") nextBtn.disabled = false;
@@ -707,7 +874,7 @@
         }
 
         function choose(i) {
-          var q = pool[idx].q, oi = pool[idx].oi;
+          var q = pool[idx].q, key = pool[idx].key;
           answers[idx] = i;
           if (behavior === "study") {
             if (answered) return;
@@ -720,9 +887,9 @@
               else { whys[k].classList.add("show"); }
             });
             var correct = q.options[i] && q.options[i].correct;
-            if (correct) { score++; if (review === "weak") { var w = p.weakMcqs.indexOf(oi); if (w !== -1) p.weakMcqs.splice(w, 1); } }
-            else if (p.weakMcqs.indexOf(oi) === -1) { p.weakMcqs.push(oi); } // auto-collect weak areas
-            setProg(id, n, p);
+            if (correct) { score++; if (review === "weak") { var w = p.weakMcqs.indexOf(key); if (w !== -1) p.weakMcqs.splice(w, 1); } }
+            else if (p.weakMcqs.indexOf(key) === -1) { p.weakMcqs.push(key); } // auto-collect weak areas
+            setUnitProg(id, n, subId, p);
             setText("qScore", "Score: " + score + " / " + total);
             document.getElementById("qNext").disabled = false;
           } else {
@@ -740,7 +907,7 @@
             pool.forEach(function (item, k) {
               var chosen = answers[k];
               if (chosen > -1 && item.q.options[chosen] && item.q.options[chosen].correct) score++;
-              else if (item.q.options.some(function (o) { return o.correct; }) && p.weakMcqs.indexOf(item.oi) === -1) p.weakMcqs.push(item.oi);
+              else if (item.q.options.some(function (o) { return o.correct; }) && p.weakMcqs.indexOf(item.key) === -1) p.weakMcqs.push(item.key);
             });
           }
           var prevPct = (p.quiz && typeof p.quiz.lastScore === "number") ? Math.round(p.quiz.lastScore / total * 100) : null;
@@ -752,12 +919,12 @@
             p.quiz.total = total; p.quiz.lastScore = score;
             p.quiz.best = Math.max(p.quiz.best || 0, score);
           }
-          setProg(id, n, p);
+          setUnitProg(id, n, subId, p);
 
           var pct = Math.round(score / total * 100);
           var isTest = ch.kind === "test";
           var backHref = isTest ? "/book.html?book=" + encodeURIComponent(id)
-                                : "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n;
+                                : "/chapter.html?book=" + encodeURIComponent(id) + "&ch=" + n + subParam;
           var delta = "";
           if (prevPct !== null && (mode === "study" || mode === "timed")) {
             var d = pct - prevPct;
@@ -802,9 +969,9 @@
             return;
           }
           rankEl.textContent = "Checking your ranking…";
-          var kind = ch.kind === "test" ? "test" : "chapter", chNum = parseInt(n, 10);
-          window.TR.client.rpc("submit_score", { p_book: id, p_chapter: chNum, p_kind: kind, p_score: score, p_total: total })
-            .then(function () { return window.TR.client.rpc("chapter_percentile", { p_book: id, p_chapter: chNum }); })
+          var kind = ch.kind === "test" ? "test" : "chapter", chNum = parseInt(n, 10), subKey = subId || "";
+          window.TR.client.rpc("submit_score", { p_book: id, p_chapter: chNum, p_subtopic: subKey, p_kind: kind, p_score: score, p_total: total })
+            .then(function () { return window.TR.client.rpc("chapter_percentile", { p_book: id, p_chapter: chNum, p_subtopic: subKey }); })
             .then(function (res) {
               var d = res && res.data;
               if (!d || !d.signedIn) { rankEl.style.display = "none"; return; }

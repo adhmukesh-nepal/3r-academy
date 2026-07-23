@@ -99,6 +99,54 @@ def cell(d, key):
     if v is None: return ""
     return str(v).strip()
 
+def build_content(nrows, crows, mrows, vrows, where, label):
+    """Build one study unit's {videos, notes, decks, mcqs} from its filtered rows.
+    Used for a whole chapter (no subtopics) or for a single subtopic. `label` is a
+    human string like 'ch1' or 'ch1/central-tendency' used only in error messages."""
+    videos = [{"title": cell(v, "title"), "yt": cell(v, "yt")} for v in vrows]
+    notes = [cell(x, "note") for x in nrows if cell(x, "note")]
+    # decks (preserve first-seen order)
+    decks, order_ids = {}, []
+    for row in crows:
+        did = cell(row, "deck_id")
+        front, back = cell(row, "front"), cell(row, "back")
+        if not did:
+            err("%s %s: a flashcard row has no deck_id" % (where, label)); continue
+        if not front or not back:
+            err("%s %s deck '%s': a card is missing front or back" % (where, label, did)); continue
+        if did not in decks:
+            decks[did] = {"id": did, "name": cell(row, "deck_name"),
+                          "desc": cell(row, "deck_desc"), "cards": []}
+            order_ids.append(did)
+        decks[did]["cards"].append([front, back])
+    deck_list = [decks[d] for d in order_ids]
+    # mcqs
+    mcqs = []
+    for row in mrows:
+        q = cell(row, "question")
+        ci = as_int(row.get("correct"), "%s %s MCQ" % (where, label))
+        if not q or ci is None:
+            continue
+        if ci < 1 or ci > 4:
+            err("%s %s: MCQ '%s' has correct=%s (must be 1-4)" % (where, label, q[:40], ci)); continue
+        opts = []
+        for i in (1, 2, 3, 4):
+            text = cell(row, "option%d" % i)
+            why = cell(row, "why%d" % i)
+            if not text:
+                continue
+            if not why:
+                err("%s %s: MCQ '%s' option%d has no explanation (why%d)" % (where, label, q[:40], i, i))
+            is_correct = (i == ci)
+            # the correct option's explanation is auto-prefixed with "Correct —"
+            if is_correct and why and not why.lower().startswith("correct"):
+                why = "Correct — " + why
+            opts.append({"text": text, "correct": is_correct, "why": why})
+        if not any(o["correct"] for o in opts):
+            err("%s %s: MCQ '%s' — 'correct' points to an empty option" % (where, label, q[:40]))
+        mcqs.append({"q": q, "options": opts})
+    return {"videos": videos, "notes": notes, "decks": deck_list, "mcqs": mcqs}
+
 def build_book(path):
     """Parse one workbook into (catalog_entry, book_json, {chapnum: chapter_json})."""
     where = path.name
@@ -144,6 +192,35 @@ def build_book(path):
                          "kind": (cell(c, "kind") or "chapter").lower()})
     chapters.sort(key=lambda c: c["n"])
 
+    # subtopics (optional second level within a chapter) -> {chapter n: [ordered subtopics]}
+    subs_by = {}
+    for s in sheet_rows(wb, "Subtopics", where):
+        cn = as_int(s.get("chapter"), "%s: Subtopics.chapter" % where)
+        if cn is None:
+            continue
+        sid = cell(s, "id")
+        if not sid:
+            err("%s: a Subtopics row (chapter %s) has no id" % (where, cn)); continue
+        subs_by.setdefault(cn, []).append({
+            "id": sid, "title": cell(s, "title"), "desc": cell(s, "desc"),
+            "ready": as_bool(s.get("ready")),
+            "order": as_int(s.get("order"), "%s: Subtopics.order" % where) if s.get("order") not in (None, "") else 999,
+        })
+    for cn, slist in subs_by.items():
+        slist.sort(key=lambda s: (s["order"], s["id"]))
+        seen = set()
+        for s in slist:
+            if s["id"] in seen:
+                err("%s ch%s: duplicate subtopic id '%s'" % (where, cn, s["id"]))
+            seen.add(s["id"])
+    # expose subtopic titles on the public TOC (book.json) and validate readiness
+    for c in chapters:
+        slist = subs_by.get(c["n"])
+        if slist:
+            c["subtopics"] = [{"id": s["id"], "title": s["title"], "ready": s["ready"]} for s in slist]
+            if c["ready"] and not any(s["ready"] for s in slist):
+                err("%s ch%s: chapter is ready but has no ready subtopic" % (where, c["n"]))
+
     book_json = {
         "book": bid,
         "name": cell(b, "title") or cell(b, "name"),
@@ -152,7 +229,7 @@ def build_book(path):
         "chapters": chapters,
     }
 
-    # group content by chapter number
+    # group content rows by chapter number (then optionally by subtopic within a chapter)
     def group(sheet):
         g = {}
         for row in sheet_rows(wb, sheet, where):
@@ -167,63 +244,45 @@ def build_book(path):
     mcqs_by = group("MCQs")
     videos_by = group("Videos")
 
+    def by_sub(rows, sid):
+        return [r for r in rows if cell(r, "subtopic") == sid]
+
     chapter_json = {}
     chap_titles = {c["n"]: c["title"] for c in chapters}
     chap_kind = {c["n"]: c.get("kind", "chapter") for c in chapters}
-    involved = set(notes_by) | set(cards_by) | set(mcqs_by) | set(videos_by)
+    involved = set(notes_by) | set(cards_by) | set(mcqs_by) | set(videos_by) | set(subs_by)
     involved |= {c["n"] for c in chapters if c["ready"]}
 
     for n in sorted(involved):
-        # videos
-        videos = [{"title": cell(v, "title"), "yt": cell(v, "yt")} for v in videos_by.get(n, [])]
-        # notes
-        notes = [cell(x, "note") for x in notes_by.get(n, []) if cell(x, "note")]
-        # decks (preserve first-seen order)
-        decks, order_ids = {}, []
-        for row in cards_by.get(n, []):
-            did = cell(row, "deck_id")
-            front, back = cell(row, "front"), cell(row, "back")
-            if not did:
-                err("%s ch%s: a flashcard row has no deck_id" % (where, n)); continue
-            if not front or not back:
-                err("%s ch%s deck '%s': a card is missing front or back" % (where, n, did)); continue
-            if did not in decks:
-                decks[did] = {"id": did, "name": cell(row, "deck_name"),
-                              "desc": cell(row, "deck_desc"), "cards": []}
-                order_ids.append(did)
-            decks[did]["cards"].append([front, back])
-        deck_list = [decks[d] for d in order_ids]
-        # mcqs
-        mcqs = []
-        for row in mcqs_by.get(n, []):
-            q = cell(row, "question")
-            ci = as_int(row.get("correct"), "%s ch%s MCQ" % (where, n))
-            if not q or ci is None:
-                continue
-            if ci < 1 or ci > 4:
-                err("%s ch%s: MCQ '%s' has correct=%s (must be 1-4)" % (where, n, q[:40], ci)); continue
-            opts = []
-            for i in (1, 2, 3, 4):
-                text = cell(row, "option%d" % i)
-                why = cell(row, "why%d" % i)
-                if not text:
-                    continue
-                if not why:
-                    err("%s ch%s: MCQ '%s' option%d has no explanation (why%d)" % (where, n, q[:40], i, i))
-                is_correct = (i == ci)
-                # the correct option's explanation is auto-prefixed with "Correct —"
-                if is_correct and why and not why.lower().startswith("correct"):
-                    why = "Correct — " + why
-                opts.append({"text": text, "correct": is_correct, "why": why})
-            if not any(o["correct"] for o in opts):
-                err("%s ch%s: MCQ '%s' — 'correct' points to an empty option" % (where, n, q[:40]))
-            mcqs.append({"q": q, "options": opts})
-
-        chapter_json[n] = {
-            "book": bid, "number": n, "title": chap_titles.get(n, "Chapter %d" % n),
-            "kind": chap_kind.get(n, "chapter"),
-            "videos": videos, "notes": notes, "decks": deck_list, "mcqs": mcqs,
-        }
+        base = {"book": bid, "number": n, "title": chap_titles.get(n, "Chapter %d" % n),
+                "kind": chap_kind.get(n, "chapter")}
+        subs = subs_by.get(n)
+        if subs:
+            sub_ids = {s["id"] for s in subs}
+            # every content row in a subtopic-chapter must name a declared subtopic
+            for sheet_name, rows_by in (("Notes", notes_by), ("Flashcards", cards_by),
+                                        ("MCQs", mcqs_by), ("Videos", videos_by)):
+                for r in rows_by.get(n, []):
+                    sid = cell(r, "subtopic")
+                    if not sid:
+                        err("%s ch%s: a %s row has no subtopic (this chapter uses subtopics)" % (where, n, sheet_name))
+                    elif sid not in sub_ids:
+                        err("%s ch%s: a %s row names unknown subtopic '%s'" % (where, n, sheet_name, sid))
+            sub_list = []
+            for s in subs:
+                content = build_content(
+                    by_sub(notes_by.get(n, []), s["id"]),
+                    by_sub(cards_by.get(n, []), s["id"]),
+                    by_sub(mcqs_by.get(n, []), s["id"]),
+                    by_sub(videos_by.get(n, []), s["id"]),
+                    where, "ch%s/%s" % (n, s["id"]))
+                sub_list.append({"id": s["id"], "title": s["title"], "desc": s["desc"],
+                                 "ready": s["ready"], **content})
+            base["subtopics"] = sub_list
+        else:
+            base.update(build_content(notes_by.get(n, []), cards_by.get(n, []),
+                                      mcqs_by.get(n, []), videos_by.get(n, []), where, "ch%s" % n))
+        chapter_json[n] = base
 
     return {"catalog": catalog, "order": order, "book_json": book_json,
             "chapters": chapter_json, "code": code, "salt": salt}

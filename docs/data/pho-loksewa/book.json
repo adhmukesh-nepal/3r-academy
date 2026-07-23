@@ -6,57 +6,56 @@
   "chapters": [
     {
       "n": 1,
-      "title": "Scale & data types",
+      "title": "Biostatistics",
       "ready": true,
-      "kind": "chapter"
-    },
-    {
-      "n": 2,
-      "title": "Data presentation",
-      "ready": true,
-      "kind": "chapter"
-    },
-    {
-      "n": 3,
-      "title": "Measures of central tendency",
-      "ready": true,
-      "kind": "chapter"
-    },
-    {
-      "n": 4,
-      "title": "Measures of dispersion",
-      "ready": true,
-      "kind": "chapter"
-    },
-    {
-      "n": 5,
-      "title": "Probability & distributions",
-      "ready": false,
-      "kind": "chapter"
-    },
-    {
-      "n": 6,
-      "title": "Sampling & estimation",
-      "ready": false,
-      "kind": "chapter"
-    },
-    {
-      "n": 7,
-      "title": "Hypothesis testing",
-      "ready": false,
-      "kind": "chapter"
-    },
-    {
-      "n": 8,
-      "title": "Statistical tests",
-      "ready": false,
-      "kind": "chapter"
-    },
-    {
-      "n": 9,
-      "title": "Correlation & regression",
-      "ready": false,
-      "kind": "chapter"
+      "kind": "chapter",
+      "subtopics": [
+        {
+          "id": "scale-data-types",
+          "title": "Scale & data types",
+          "ready": true
+        },
+        {
+          "id": "data-presentation",
+          "title": "Data presentation",
+          "ready": true
+        },
+        {
+          "id": "central-tendency",
+          "title": "Measures of central tendency",
+          "ready": true
+        },
+        {
+          "id": "dispersion",
+          "title": "Measures of dispersion",
+          "ready": true
+        },
+        {
+          "id": "probability-distributions",
+          "title": "Probability & distributions",
+          "ready": false
+        },
+        {
+          "id": "sampling-estimation",
+          "title": "Sampling & estimation",
+          "ready": false
+        },
+        {
+          "id": "hypothesis-testing",
+          "title": "Hypothesis testing",
+          "ready": false
+        },
+        {
+          "id": "statistical-tests",
+          "title": "Statistical tests",
+          "ready": false
+        },
+        {
+          "id": "correlation-regression",
+          "title": "Correlation & regression",
+          "ready": false
+        }
+      ]
     }
   ]
 }

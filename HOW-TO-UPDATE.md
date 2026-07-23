@@ -55,6 +55,32 @@ Open **https://3r.mukeshadhikari.com** and hard-refresh (**Cmd+Shift+R**) to see
 
 ---
 
+## Editing content without resetting student progress (important once live)
+
+Each student's progress — spaced-repetition schedule, ★ starred cards/questions, and weak-area
+lists — is attached to a card by its **front text** and to an MCQ by its **question stem** (not by
+row position). That makes almost every edit safe:
+
+| You want to… | Effect on student progress |
+|---|---|
+| **Add** new cards/MCQs (anywhere — top, middle, end) | ✅ Nothing lost |
+| **Reorder** rows, or accidentally sort a sheet | ✅ Nothing lost |
+| **Delete** a card/MCQ | ✅ Only that item's progress goes; everything else is intact |
+| **Fix the answer, options, explanations, or a note** | ✅ Nothing lost (the front/question is unchanged) |
+| **Move a card to a different deck / subtopic** | ✅ Its progress follows it |
+| **Reword a card's FRONT, or an MCQ's QUESTION stem** | 🔸 Just *that one* item resets (it's now a new prompt) — everything else is fine |
+
+**So the only edit that costs a student anything is rewriting the prompt itself.** If you just want
+to polish wording on the prompt and keep its history, make the change small, or accept the single-item
+reset — it never spreads to other cards/questions.
+
+Nothing else to do — this is automatic. The normal **edit → `./build.sh` → preview → push** flow
+above is all that's needed; students pick up the new content and keep their progress on next load.
+
+> **Heads-up — structural moves that DO reset progress:** renaming a book/chapter/subtopic **id**
+> (not its title — the id) changes where progress is stored, so it orphans that unit's progress.
+> Change ids only when you intend that reset; edit titles freely.
+
 ## Quick reference (the whole manual flow)
 ```
 # after editing content/<book>.xlsx and saving:
@@ -66,6 +92,8 @@ git add -A && git commit -m "update content" && git push
 ## Notes & gotchas
 - **Backup:** `content/*.xlsx` lives only on this Mac (not on GitHub — it holds the codes).
   Keep a copy on OneDrive; if you edit on another computer, bring the file back into `content/`.
+  Put any backup/old copies in **`content/backups/`**, never loose in `content/` — the build scans
+  every `content/*.xlsx` and a stray copy would create a duplicate book.
 - **New book/course:** copy a workbook to `content/<new-id>.xlsx`, fill the **Book** sheet, add
   content, then build + push (recipe in `CLAUDE.md §4`).
 - **Deploy stuck/failed:** GitHub Pages is occasionally flaky — GitHub → **Actions** tab →

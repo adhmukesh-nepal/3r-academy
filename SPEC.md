@@ -20,6 +20,11 @@ flashcards with Anki-style spaced repetition (Again/Good/Easy) + ★ bookmarks; 
 (per-option explanations) and Timed mock modes; weak-areas auto-review; progress tracking; notes;
 YouTube-placeholder videos; installable **PWA** with offline support. Content is **AES-GCM
 encrypted** (key = PBKDF2 of the book access code); the site serves only ciphertext.
+Hierarchy is **Book → Chapter → (optional) Subtopic → content**: a chapter may declare subtopics
+(via the `Subtopics` sheet), in which case each subtopic is its own study unit — own notes,
+flashcards, MCQs, timed quiz, progress and **per-subtopic percentile ranking** (opened via
+`?book=&ch=&sub=<id>`); chapters with no subtopics render flat as before. Ranking also exposes an
+**overall percentile** per student (their mean timed-test score vs the whole cohort for that book).
 
 **Accounts (Phase A):** optional **email+password** sign-in (primary) with an **email-code**
 fallback / password recovery; new-account **onboarding form** capturing name, phone, profession,

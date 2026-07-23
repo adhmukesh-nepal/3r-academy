@@ -127,10 +127,11 @@ converter. **You never touch JSON or code.**
 |---|---|---|
 | `Book` | `id, name, board, desc, code, ready, title, edition, tagline, order, category` | one row; `id` is lowercase-kebab (`ph-officer`); `name` = short catalog name, `title` = full book title on the book page; `ready`/`order` control the home grid; `category` = the exam track (`loksewa` / `license` / `entrance`) that drives the home-page filter chips; `ready` = `TRUE`/`FALSE` |
 | `Chapters` | `n, title, ready, kind` | one row per chapter. `kind` blank/`chapter` = normal chapter; `kind = test` = a **full-length mock test** (shown in its own "Full-length mock tests" section, opens straight into timed mode). Give tests a distinct `n` (e.g. 101) and put their questions in the `MCQs` sheet with `chapter = 101`. |
-| `Notes` | `chapter, note` | one row per one-liner; `chapter` = the chapter number |
-| `Flashcards` | `chapter, deck_id, deck_name, deck_desc, front, back` | one row per card; rows sharing a `deck_id` form a deck (deck_name/deck_desc taken from the first row of that deck) |
-| `MCQs` | `chapter, question, correct, option1, why1, option2, why2, option3, why3, option4, why4` | `correct` = which option number (1–4) is right |
-| `Videos` | `chapter, title, yt` | leave `yt` blank → "coming soon" card; fill the YouTube id to embed |
+| `Subtopics` *(optional)* | `chapter, id, title, desc, ready, order` | one row per subtopic **within** a chapter (a chapter is a big topic, e.g. *Biostatistics*; subtopics are its concepts). `id` = lowercase-kebab, unique within the chapter. When a chapter has ≥1 subtopic row it becomes a **subtopic chooser**, and each subtopic is its own study unit (own notes/decks/MCQs/quiz/progress/ranking). `ready`/`order` behave like chapters. A chapter with **no** subtopic rows behaves exactly as before. |
+| `Notes` | `chapter, subtopic, note` | one row per one-liner; `chapter` = the chapter number. `subtopic` = the subtopic `id` (**required** if that chapter uses subtopics; leave blank otherwise). |
+| `Flashcards` | `chapter, subtopic, deck_id, deck_name, deck_desc, front, back` | one row per card; rows sharing a `deck_id` form a deck (deck_name/deck_desc taken from the first row of that deck). `subtopic` as above. |
+| `MCQs` | `chapter, subtopic, question, correct, option1, why1, option2, why2, option3, why3, option4, why4` | `correct` = which option number (1–4) is right. `subtopic` as above. |
+| `Videos` | `chapter, subtopic, title, yt` | leave `yt` blank → "coming soon" card; fill the YouTube id to embed. `subtopic` as above. |
 
 A **book that isn't ready yet** (coming soon) still gets its own workbook with just the `Book`
 sheet filled in (`ready = FALSE`) and empty content sheets — that's how it appears greyed-out on
@@ -159,6 +160,7 @@ For contributors/Claude verifying the converter, these are the target JSON shape
   "desc":"Comprehensive Review", "code":"ADHPHO12026", "ready":true }
 
 // chapter file ch6.json  ← Notes / Flashcards / MCQs / Videos sheets (filtered by chapter)
+// (this is the FLAT shape — a chapter with NO subtopics)
 { "book":"ph-officer", "number":6, "title":"…",
   "notes":[ "P = I × D. Incidence = new; prevalence = new + old." ],
   "decks":[ { "id":"diseases", "name":"Disease KEY facts",
@@ -171,7 +173,25 @@ For contributors/Claude verifying the converter, these are the target JSON shape
                { "text":"Hypnozoite", "correct":false, "why":"Dormant liver stage causing relapse (vivax/ovale), not the infective form." }
              ] } ],
   "videos":[ { "title":"Levels of prevention & immunization", "yt":"" } ] }
+
+// chapter file WITH subtopics ← same sheets, bucketed by (chapter, subtopic)
+// The chapter object holds a `subtopics[]`; each subtopic carries its OWN notes/decks/mcqs/videos.
+{ "book":"pho-loksewa", "number":1, "title":"Biostatistics", "kind":"chapter",
+  "subtopics":[
+    { "id":"central-tendency", "title":"Measures of central tendency", "desc":"", "ready":true,
+      "notes":[ … ], "decks":[ … ], "mcqs":[ … ], "videos":[ … ] },
+    { "id":"dispersion", "title":"Measures of dispersion", "ready":false,
+      "notes":[], "decks":[], "mcqs":[], "videos":[] }
+  ] }
+
+// book.json chapter entries also expose a subtopic summary (public table of contents):
+//   { "n":1, "title":"Biostatistics", "ready":true, "kind":"chapter",
+//     "subtopics":[ { "id":"central-tendency", "title":"…", "ready":true }, … ] }
 ```
+
+The app reads the chapter file and: if it has `subtopics`, `chapter.html` shows a **subtopic
+chooser** (open a subtopic via `?book=&ch=&sub=<id>`); otherwise it renders the flat chapter as
+before. URLs gain an optional `&sub=<id>`.
 
 ---
 
@@ -183,9 +203,20 @@ For contributors/Claude verifying the converter, these are the target JSON shape
   `app.js`.
 - **Data fetch:** one `loadJSON(path)` helper with a `try/catch` that shows a friendly error
   card; never let a fetch failure blank the page.
-- **State/storage keys:** namespace all `localStorage` keys:
-  `unlocked` (array of book ids), `progress:<book>:<ch>`, `srs:<book>:<ch>:<deck>:<cardIndex>`,
-  `streak`, `lastStudied`. Document any new key here.
+- **State/storage keys** (as shipped — namespace any new key here): `3r_keys` (`{bookId: code}`
+  unlock map), `progress:<book>:<ch>` (one JSON blob per chapter holding `quiz`, `cards`, `starCards`,
+  `starMcqs`, `weakMcqs` — SRS lives **inside** this blob, not a separate `srs:` key), `tr_streak`
+  (`{count,last}`) and `tr_goal` (`{day,cards,quizzes}`) for the global streak + daily goal, `theme`.
+  **Subtopic progress nests inside the chapter blob** under `p.subs[<subId>]` (same shape as the
+  top-level fields) so the key stays 3-segment and account sync is unchanged — use
+  `getUnitProg`/`setUnitProg(book, ch, sub)` (a falsy `sub` = the top-level blob).
+- **Progress is keyed by CONTENT IDENTITY, not position.** A card's key is `"c"+hash(front)`, an MCQ's
+  is `"q"+hash(question)` (`hashStr`, `unitKeys`, `pruneProgress` in `app.js`). So authors may add,
+  insert, reorder or delete rows and edit answers/options/explanations **without** disturbing anyone's
+  SRS/stars/weak-areas; only rewriting a card's front or an MCQ's question stem resets that one item.
+  `pruneProgress` drops keys with no matching content on load (this is what performed the one-time
+  reset when the scheme changed from position-based keys). Keep the hash in lock-step if you ever
+  compute it elsewhere. Author-facing rules live in `HOW-TO-UPDATE.md`.
 - **Accessibility:** buttons are real `<button>`s; cards flippable by keyboard; sufficient
   colour contrast (the palette above already passes).
 - **Content is encrypted; codes live only in the spreadsheet.** Chapter content is served as
