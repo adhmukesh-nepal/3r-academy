@@ -32,3 +32,7 @@ venv/
 # REFERENCE / SOURCE MATERIAL — kept OFF the public repo (curriculum + copyrighted
 # textbook PDFs used only for authoring). Back up privately (OneDrive), never commit.
 resources/
+
+# PRIVATE working notes — competitor analysis, pricing/business strategy, roadmap
+# reasoning. NEVER commit (public repo). Keep here or in private memory.
+notes/

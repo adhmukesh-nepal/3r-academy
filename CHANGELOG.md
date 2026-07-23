@@ -15,7 +15,7 @@ this is the human summary. Live at **https://3r.mukeshadhikari.com**.
 - **All four rationales** shown in the timed-test review (previously only correct + your pick).
 - Mobile ergonomics (bigger tap targets), button press micro-interactions, app-icon byline
   "by Dr. Mukesh Adhikari".
-
+- *Design review benchmarked vs Quizlet/Anki/UWorld/Duolingo; Tier 2/3 documented.*
 
 ### Percentile ranking + full-length tests (client shipped; needs `RANKING-SETUP.md` SQL)
 - **Decisions:** timed attempts only; **chapters ranked on most-recent** score, **full-length tests

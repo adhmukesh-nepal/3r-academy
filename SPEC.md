@@ -97,7 +97,7 @@ Remaining (full detail in the plan file `~/.claude/plans/i-am-trying-to-expressi
 **Schema add:** `codes(code, book_id, max_uses, used_count)`, `entitlements` already exists.
 **Effort:** medium–high (2 edge functions + code-admin + client rewiring). **Honest limit:** a
 paid, logged-in user can still scrape their own decrypted content; Phase B stops *non-buyers and
-casual code-sharing*, and lets you revoke codes — .
+casual code-sharing*, and lets you revoke codes.
 
 ## 🔜 Phase C — subscriptions — NOT built (builds on Phase B)
 **Approach:** add plans + recurring access; gate content on an **active subscription** (server-side,
@@ -107,8 +107,8 @@ reusing Phase B's `content` function to also check subscription state).
   eSewa / Khalti / Fonepay** for web. This choice drives the integration.
 - **State:** payment provider webhook → Supabase `subscriptions(user_id, status, plan, expires_at)`;
   `content` function checks it.
-
-
+<!-- Business model / pricing decisions are PRIVATE — see gitignored
+     notes/strategy-competitive-landscape.md (being actively revised, 2026-07). -->
 - **Effort:** high (payment integration + webhooks + billing UI + subscription checks).
 
 ## ✅ Percentile ranking + full-length tests — BUILT (activate with `RANKING-SETUP.md` SQL)
@@ -175,40 +175,15 @@ as everyone improves — intended). Chapters are overwrite (measures current mas
 first attempt is server-locked so it can't be ground. Only affects the caller's own displayed rank;
 no one can read others' scores.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<!-- Competitive landscape, pricing/business strategy, and roadmap reasoning are PRIVATE.
+     Per CLAUDE.md §1 (public repo — never commit competitor analysis / strategy), that
+     content lives in the gitignored `notes/strategy-competitive-landscape.md` and in
+     private memory. Do not re-add it here. -->
 
 ## How to resume later
 Tell a new session: *"Read SPEC.md → BUILD STATUS & ROADMAP, then start Phase B"* (or C). The
 prerequisites, file touch-points, and schema additions are listed above. For now the project runs
-on **Phase A**; B and C are optional and only needed if code-sharing hurts revenue (B) or you move
-to recurring pricing (C).
+on **Phase A**; B and C are optional later phases.
 
 ---
 
@@ -289,11 +264,10 @@ listing (§7.6).
   modes. Our MCQ design follows this.
 - **Anki** — SM-2 **spaced repetition**, Again/Good/Easy ratings. Our progress tracker adopts a
   lightweight version.
-
-
-
-
-
+<!-- Nepal-market competitor/pricing notes and the positioning/differentiator are PRIVATE —
+     see gitignored notes/strategy-competitive-landscape.md (CLAUDE.md §1). -->
+- **Design pattern adopted:** two MCQ modes (tutor + timed) with per-question explanations, the
+  common format for Nepali exam-prep apps.
 
 ---
 
