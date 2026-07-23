@@ -673,8 +673,9 @@
   /* ---------- small effects: count-up + confetti ---------- */
   function countUp(el, to, ms) {
     if (!el) return; var start = null, from = 0;
+    function fmt(v) { var r = Math.round(v * 10) / 10; return (r % 1 === 0) ? String(r) : r.toFixed(1); }
     function step(ts) { if (!start) start = ts; var p = Math.min(1, (ts - start) / ms);
-      el.textContent = Math.round(from + (to - from) * p) + el.getAttribute("data-suffix");
+      el.textContent = fmt(from + (to - from) * p) + el.getAttribute("data-suffix");
       if (p < 1) requestAnimationFrame(step); }
     requestAnimationFrame(step);
   }
@@ -825,18 +826,24 @@
 
       function runQuiz(pool) {
         var idx = 0, score = 0, answered = false;
-        var answers = pool.map(function () { return -1; });
+        var isTimed = behavior === "timed";
+        var answers = pool.map(function () { return -1; });   // selected option index, -1 = unanswered
+        var marked = pool.map(function () { return false; });  // timed: "mark for review" flags
         var total = pool.length;
-        var SECS_PER_Q = 45; // timed test allots 45 seconds per question
+        var NEG_MARK = 0.2;   // timed test: each WRONG answer deducts 0.2 (skipped = no penalty)
+        var SECS_PER_Q = 45;  // timed test allots 45 seconds per question
         var secsLeft = total * SECS_PER_Q, timer = null;
 
+        function fmtScore(x) { var r = Math.round(x * 10) / 10; return (r % 1 === 0) ? String(r) : r.toFixed(1); }
+
         root.innerHTML =
-          '<div class="quiz-bar"><span id="qProg"></span>' + (behavior === "timed" ? '<span class="timer" id="qTimer"></span>' : '<span></span>') + '</div>' +
+          '<div class="quiz-bar"><span id="qProg"></span>' + (isTimed ? '<span class="timer" id="qTimer"></span>' : '<span></span>') + '</div>' +
           '<div class="progress-track"><span id="qFill"></span></div>' +
-          '<div id="qHolder"></div>';
+          '<div id="qHolder"></div>' +
+          (isTimed ? '<div class="qpalette" id="qPalette"></div>' : '');
         var holder = document.getElementById("qHolder");
 
-        if (behavior === "timed") {
+        if (isTimed) {
           tick();
           timer = setInterval(function () { secsLeft--; if (secsLeft <= 0) { secsLeft = 0; tick(); finish(); } else tick(); }, 1000);
         }
@@ -844,41 +851,75 @@
           var t = document.getElementById("qTimer");
           if (t) { var m = Math.floor(secsLeft / 60), s = secsLeft % 60; t.textContent = "⏱ " + m + ":" + (s < 10 ? "0" : "") + s; }
         }
+
+        function buildPalette() {
+          var pal = document.getElementById("qPalette");
+          if (!pal) return;
+          var h = '<div class="pal-legend"><span class="answered">Answered</span><span class="marked">Marked for review</span><span class="unseen">Skipped</span></div><div class="pal-grid">';
+          for (var k = 0; k < total; k++) {
+            var cls = "pal-cell" + (k === idx ? " cur" : "") + (answers[k] > -1 ? " answered" : "") + (marked[k] ? " marked" : "");
+            h += '<button class="' + cls + '" data-k="' + k + '">' + (k + 1) + (marked[k] ? " ⚑" : "") + '</button>';
+          }
+          pal.innerHTML = h + '</div>';
+          pal.querySelectorAll(".pal-cell").forEach(function (c) {
+            c.onclick = function () { idx = parseInt(c.getAttribute("data-k"), 10); render(); };
+          });
+        }
+
         render();
 
         function render() {
           answered = false;
           var q = pool[idx].q, key = pool[idx].key;
           setText("qProg", "Question " + (idx + 1) + " of " + total + (review ? " · " + (review === "weak" ? "weak areas" : "starred") : ""));
-          var fill = document.getElementById("qFill"); if (fill) fill.style.width = Math.round(idx / total * 100) + "%";
+          var done = answers.filter(function (a) { return a > -1; }).length;
+          var fill = document.getElementById("qFill"); if (fill) fill.style.width = Math.round(done / total * 100) + "%";
 
           var starred = p.starMcqs.indexOf(key) !== -1;
           var html = '<div class="qcard"><div class="qhead"><p class="qtext">' + esc(q.q) + '</p>' +
                      '<button class="qstar' + (starred ? " on" : "") + '" id="qStar" title="Star this question">' + (starred ? "★" : "☆") + '</button></div><div class="opts">';
           q.options.forEach(function (o, i) {
-            html += '<button class="opt" data-i="' + i + '"><span class="lab">' + LETTERS[i] + '</span><span>' + esc(o.text) + '</span></button>' +
+            var sel = (isTimed && answers[idx] === i) ? " selected" : "";
+            html += '<button class="opt' + sel + '" data-i="' + i + '"><span class="lab">' + LETTERS[i] + '</span><span>' + esc(o.text) + '</span></button>' +
                     '<div class="why" data-why="' + i + '">' + esc(o.why) + '</div>';
           });
-          html += '</div><div class="qfoot"><span class="score" id="qScore"></span><button id="qNext" disabled>' +
-                  (idx === total - 1 ? (behavior === "timed" ? "Finish test" : "See results") : "Next →") + '</button></div></div>';
+          html += '</div><div class="qfoot">';
+          if (isTimed) {
+            html += '<button class="qmark' + (marked[idx] ? " on" : "") + '" id="qMark">' + (marked[idx] ? "⚑ Marked" : "⚑ Mark for review") + '</button>' +
+                    '<div class="qnav">' +
+                      '<button id="qPrev"' + (idx === 0 ? " disabled" : "") + '>← Prev</button>' +
+                      '<button id="qNext"' + (idx === total - 1 ? " disabled" : "") + '>Next →</button>' +
+                      '<button id="qFinish">Finish test</button>' +
+                    '</div>';
+          } else {
+            html += '<span class="score" id="qScore"></span><button id="qNext" disabled>' +
+                    (idx === total - 1 ? "See results" : "Next →") + '</button>';
+          }
+          html += '</div></div>';
           holder.innerHTML = html;
 
-          if (behavior === "study") setText("qScore", "Score: " + score + " / " + total);
+          if (!isTimed) setText("qScore", "Score: " + fmtScore(score) + " / " + total);
           holder.querySelectorAll(".opt").forEach(function (btn) {
             btn.onclick = function () { choose(parseInt(btn.getAttribute("data-i"), 10)); };
           });
           document.getElementById("qStar").onclick = function () {
             toggleIn(p.starMcqs, key); setUnitProg(id, n, subId, p); render();
           };
-          var nextBtn = document.getElementById("qNext");
-          if (behavior === "timed") nextBtn.disabled = false;
-          nextBtn.onclick = advance;
+          if (isTimed) {
+            document.getElementById("qMark").onclick = function () { marked[idx] = !marked[idx]; render(); };
+            document.getElementById("qPrev").onclick = function () { if (idx > 0) { idx--; render(); } };
+            document.getElementById("qNext").onclick = function () { if (idx < total - 1) { idx++; render(); } };
+            document.getElementById("qFinish").onclick = confirmFinish;
+            buildPalette();
+          } else {
+            document.getElementById("qNext").onclick = advance;
+          }
         }
 
         function choose(i) {
           var q = pool[idx].q, key = pool[idx].key;
           answers[idx] = i;
-          if (behavior === "study") {
+          if (!isTimed) {
             if (answered) return;
             answered = true;
             var opts = holder.querySelectorAll(".opt"), whys = holder.querySelectorAll(".why");
@@ -892,25 +933,43 @@
             if (correct) { score++; if (review === "weak") { var w = p.weakMcqs.indexOf(key); if (w !== -1) p.weakMcqs.splice(w, 1); } }
             else if (p.weakMcqs.indexOf(key) === -1) { p.weakMcqs.push(key); } // auto-collect weak areas
             setUnitProg(id, n, subId, p);
-            setText("qScore", "Score: " + score + " / " + total);
+            setText("qScore", "Score: " + fmtScore(score) + " / " + total);
             document.getElementById("qNext").disabled = false;
           } else {
+            // timed: record the choice, no feedback; refresh highlight + palette
             holder.querySelectorAll(".opt").forEach(function (b) { b.classList.remove("selected"); });
-            holder.querySelector('.opt[data-i="' + i + '"]').classList.add("selected");
+            var chosen = holder.querySelector('.opt[data-i="' + i + '"]'); if (chosen) chosen.classList.add("selected");
+            var done = answers.filter(function (a) { return a > -1; }).length;
+            var fill = document.getElementById("qFill"); if (fill) fill.style.width = Math.round(done / total * 100) + "%";
+            buildPalette();
           }
         }
 
-        function advance() { if (idx === total - 1) { finish(); return; } idx++; render(); }
+        function advance() { if (idx === total - 1) { finish(); return; } idx++; render(); }  // study-mode linear flow
+
+        function confirmFinish() {
+          var un = answers.filter(function (a) { return a === -1; }).length;
+          var mk = marked.filter(Boolean).length;
+          var parts = [];
+          if (un) parts.push(un + " unanswered");
+          if (mk) parts.push(mk + " marked for review");
+          var msg = parts.length ? "You still have " + parts.join(" and ") + ". Finish the test now?" : "Finish the test and see your score?";
+          if (window.confirm(msg)) finish();
+        }
 
         function finish() {
           if (timer) { clearInterval(timer); timer = null; }
-          if (behavior === "timed") {
-            score = 0;
+          var correctN = 0, wrongN = 0, skippedN = 0;
+          if (isTimed) {
             pool.forEach(function (item, k) {
               var chosen = answers[k];
-              if (chosen > -1 && item.q.options[chosen] && item.q.options[chosen].correct) score++;
-              else if (item.q.options.some(function (o) { return o.correct; }) && p.weakMcqs.indexOf(item.key) === -1) p.weakMcqs.push(item.key);
+              if (chosen === -1) { skippedN++; return; }          // skipped: no penalty, not "weak"
+              if (item.q.options[chosen] && item.q.options[chosen].correct) correctN++;
+              else { wrongN++; if (p.weakMcqs.indexOf(item.key) === -1) p.weakMcqs.push(item.key); }
             });
+            score = correctN - NEG_MARK * wrongN;   // negative marking
+            if (score < 0) score = 0;               // floor at 0
+            score = Math.round(score * 100) / 100;
           }
           var prevPct = (p.quiz && typeof p.quiz.lastScore === "number") ? Math.round(p.quiz.lastScore / total * 100) : null;
           // record quiz stats only for full-chapter runs
@@ -932,20 +991,24 @@
             var d = pct - prevPct;
             delta = '<div class="delta ' + (d >= 0 ? "up" : "down") + '">' + (d >= 0 ? "▲ +" : "▼ ") + Math.abs(d) + "% vs your last attempt</div>";
           }
+          var breakdown = isTimed
+            ? '<div class="breakdown">' + correctN + ' correct · ' + wrongN + ' wrong (−' + NEG_MARK + ' each) · ' + skippedN + ' skipped</div>'
+            : "";
           var html = '<div class="result"><div>Your score</div>' +
                      '<div class="big" id="qBig" data-suffix=" / ' + total + '">0 / ' + total + '</div>' +
-                     '<div class="pct">' + pct + '% correct</div>' + delta +
+                     '<div class="pct">' + pct + '% correct</div>' + breakdown + delta +
                      '<div id="qRank" class="qrank"></div>' +
                      '<div class="actions"><button id="qRetry">Try again</button>' +
                      '<a href="' + backHref + '">' + (isTest ? "Back to book" : "Back to chapter") + '</a></div></div>';
-          if (behavior === "timed") {
+          if (isTimed) {
             html += '<h3 style="margin:26px 0 4px;font-size:18px">Review</h3><div class="review">';
             pool.forEach(function (item, k) {
-              html += '<div class="rq"><p class="rqq">' + (k + 1) + '. ' + esc(item.q.q) + '</p>';
+              var skip = answers[k] === -1 ? ' <span class="w">· skipped</span>' : "";
+              html += '<div class="rq"><p class="rqq">' + (k + 1) + '. ' + esc(item.q.q) + skip + '</p>';
               item.q.options.forEach(function (o, j) {
                 var cls = o.correct ? "correct" : (j === answers[k] ? "wrong" : "");
-                var mark = o.correct ? "✓ " : (j === answers[k] ? "✗ " : "");
-                html += '<div class="ro ' + cls + '">' + mark + LETTERS[j] + ". " + esc(o.text) +
+                var mk = o.correct ? "✓ " : (j === answers[k] ? "✗ " : "");
+                html += '<div class="ro ' + cls + '">' + mk + LETTERS[j] + ". " + esc(o.text) +
                         '<span class="w">' + esc(o.why) + '</span></div>'; // show every option's rationale
               });
               html += '</div>';

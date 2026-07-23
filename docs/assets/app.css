@@ -235,6 +235,26 @@ ul.rapid li::before{content:"";position:absolute;left:0;top:13px;width:8px;heigh
 .review .rq .ro.correct{color:#3c5a24} .review .rq .ro.wrong{color:#c0392b}
 .review .rq .ro .w{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
 
+/* timed-test: mark-for-review, navigation, question palette, score breakdown */
+.qfoot .qmark{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:700;cursor:pointer}
+.qfoot .qmark.on{border-color:var(--rank);color:var(--rank)}
+.qfoot .qnav{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.qfoot .qnav button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer}
+.qfoot .qnav #qFinish{background:var(--rank);color:#fff;border-color:var(--rank)}
+.qfoot .qnav button:disabled{opacity:.45;cursor:default}
+.qpalette{margin:16px 0 4px}
+.pal-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px}
+.pal-legend span{display:inline-flex;align-items:center;gap:6px}
+.pal-legend span::before{content:"";width:13px;height:13px;border-radius:4px;border:1px solid var(--line);display:inline-block}
+.pal-legend .answered::before{background:var(--recall);border-color:var(--recall)}
+.pal-legend .marked::before{border:2px solid var(--rank)}
+.pal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:8px}
+.pal-cell{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:9px 0;font-size:13.5px;font-weight:700;cursor:pointer;min-height:42px}
+.pal-cell.answered{background:var(--recall);color:#fff;border-color:var(--recall)}
+.pal-cell.marked{box-shadow:inset 0 0 0 2px var(--rank)}
+.pal-cell.cur{outline:3px solid var(--read);outline-offset:1px}
+.result .breakdown{color:var(--muted);font-size:13.5px;margin:2px 0 10px}
+
 /* ---- footer ---- */
 footer{margin:34px 0 50px;color:var(--muted);font-size:13px;text-align:center}
 footer .qrnote{background:#eef3f5;border:1px dashed var(--line);border-radius:10px;padding:12px 16px;margin:0 0 16px;color:var(--ink)}

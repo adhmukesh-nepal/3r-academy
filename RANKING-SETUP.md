@@ -16,7 +16,7 @@ create table if not exists public.quiz_scores (
   chapter int not null,
   subtopic text not null default '',       -- subtopic id; '' = whole-chapter run or full-length test
   kind text not null default 'chapter',    -- 'chapter' | 'test'
-  score int not null,
+  score numeric not null,                  -- may be fractional (timed tests apply −0.2 per wrong)
   total int not null,
   pct numeric not null,                    -- score/total*100
   taken_at timestamptz not null default now(),
@@ -29,7 +29,7 @@ create policy "own scores read" on public.quiz_scores
 -- (no insert/update policy — writes happen only via submit_score() below)
 
 -- 2. Record a timed attempt: chapters/subtopics overwrite (recent); tests lock the first attempt.
-create or replace function public.submit_score(p_book text, p_chapter int, p_subtopic text, p_kind text, p_score int, p_total int)
+create or replace function public.submit_score(p_book text, p_chapter int, p_subtopic text, p_kind text, p_score numeric, p_total int)
 returns void language plpgsql security definer set search_path = public as $submit$
 declare uid uuid := auth.uid(); p numeric; sub text := coalesce(p_subtopic, '');
 begin
@@ -111,7 +111,7 @@ begin
 end; $rank$;
 
 -- 5. Allow signed-in users to call the functions
-grant execute on function public.submit_score(text,int,text,text,int,int) to authenticated;
+grant execute on function public.submit_score(text,int,text,text,numeric,int) to authenticated;
 grant execute on function public.chapter_percentile(text,int,text) to authenticated;
 grant execute on function public.book_ranking(text) to authenticated;
 ```
